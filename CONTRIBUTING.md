@@ -27,17 +27,20 @@ We use a simplified Gitflow workflow. Please follow these naming conventions:
 ## 3. Coding Standards
 
 ### Backend (Python/FastAPI)
-* **Formatter**: We use `Black` or `Ruff` for formatting.
-* **Linting**: Code must be lint-free.
-* **Typing**: Strict type hints are required. Use Pydantic models for all data schemas.
+* **Tools**: We use **Ruff** for both linting and formatting.
+* **Commands**:
+    * Format: `ruff format backend`
+    * Lint: `ruff check backend --fix`
+* **Typing**: Strict type hints are required (Pydantic models).
     * *Good*: `def calculate_risk(age: int) -> float:`
-    * *Bad*: `def calculate_risk(age):`
-* **Structure**: Keep business logic out of `routers/`. Use `services/` for logic.
+* **Structure**: Keep business logic out of `routers/`.
 
 ### Frontend (React/TypeScript)
-* **Formatter**: We use `Prettier`.
-* **Linting**: We use `ESLint`. No warnings allowed in PRs.
-* **Typing**: No `any` types allowed. Define interfaces for all props and API responses.
+* **Tools**: **ESLint** (linting) and **Prettier** (formatting).
+* **Commands**:
+    * Format: `npm run format` (runs Prettier)
+    * Lint: `npm run lint` (runs ESLint)
+* **Typing**: No `any` types allowed. Define interfaces.
 * **Components**: Use Functional Components with Hooks.
 
 ## 4. Pull Request (PR) Checklist
@@ -49,6 +52,7 @@ Before requesting a review, please ensure:
 - [ ] I have commented on my code, particularly in hard-to-understand areas.
 - [ ] I have verified that the changes work locally (Frontend + Backend).
 - [ ] The PR title follows the conventional commit format (e.g., "feat: add chat input").
+- [ ] CI checks pass (Lint & Build).
 
 ## 5. Code Review Process
 

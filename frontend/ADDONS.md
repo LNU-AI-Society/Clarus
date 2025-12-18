@@ -1,6 +1,7 @@
 # Frontend Addons & Libraries
 
 ## Installed
+
 - **Vite**: Build tool and dev server.
 - **React**: UI library.
 - **TypeScript**: Static typing.
@@ -9,6 +10,7 @@
 - **Lucide React**: Icon library.
 
 ## Potential Future Addons
+
 - **Framer Motion**: For complex animations.
 - **React Query (TanStack Query)**: For server state management and caching.
 - **Radix UI / Headless UI**: For accessible, unstyled UI primitives.
