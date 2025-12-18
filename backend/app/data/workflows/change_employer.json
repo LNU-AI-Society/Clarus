@@ -1,0 +1,39 @@
+{
+    "id": "change_employer",
+    "title": "Changing Employer",
+    "description": "Guidance when switching jobs while on a work permit.",
+    "steps": [
+        {
+            "id": "intro",
+            "title": "Start",
+            "question": "Planning to change jobs? Let's check the requirements.",
+            "type": "radio",
+            "options": [
+                "Start"
+            ],
+            "next": "permit_duration"
+        },
+        {
+            "id": "permit_duration",
+            "title": "Duration Held",
+            "question": "How long have you held your current work permit?",
+            "type": "radio",
+            "options": [
+                "Less than 24 months",
+                "More than 24 months"
+            ],
+            "next": "new_contract"
+        },
+        {
+            "id": "new_contract",
+            "title": "New Contract",
+            "question": "Have you already signed a contract with the new employer?",
+            "type": "radio",
+            "options": [
+                "Yes",
+                "No"
+            ],
+            "next": null
+        }
+    ]
+}

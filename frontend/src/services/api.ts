@@ -39,3 +39,38 @@ export const analyzeDocument = async (file: File): Promise<any> => {
 
     return await response.json();
 };
+
+// Guided Mode
+export const getWorkflows = async (): Promise<WorkflowMetadata[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/workflows`);
+    if (!response.ok) throw new Error('Failed to fetch workflows');
+    return await response.json();
+};
+
+export const startSession = async (workflowId: string): Promise<GuidedSession> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/start?workflow_id=${workflowId}`, {
+        method: 'POST'
+    });
+    if (!response.ok) throw new Error('Failed to start session');
+    return await response.json();
+};
+
+export const getSession = async (sessionId: string): Promise<GuidedSession> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/session/${sessionId}`);
+    if (!response.ok) throw new Error('Failed to fetch session');
+    return await response.json();
+};
+
+export const getStep = async (workflowId: string, stepId: string): Promise<GuidedStep> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/step/${workflowId}/${stepId}`);
+    if (!response.ok) throw new Error('Failed to fetch step');
+    return await response.json();
+};
+
+export const submitAnswer = async (sessionId: string, answer: string): Promise<GuidedSession> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/answer?session_id=${sessionId}&answer=${encodeURIComponent(answer)}`, {
+        method: 'POST'
+    });
+    if (!response.ok) throw new Error('Failed to submit answer');
+    return await response.json();
+};

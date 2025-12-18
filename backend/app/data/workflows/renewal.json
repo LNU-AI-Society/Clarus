@@ -1,0 +1,42 @@
+{
+    "id": "renewal",
+    "title": "Work Permit Renewal",
+    "description": "Step-by-step guide to renewing your Swedish work permit.",
+    "steps": [
+        {
+            "id": "intro",
+            "title": "Welcome",
+            "question": "This guide will help you check if you are ready to renew your work permit. Ready to start?",
+            "type": "radio",
+            "options": [
+                "Yes"
+            ],
+            "next": "expiry_date"
+        },
+        {
+            "id": "expiry_date",
+            "title": "Current Permit",
+            "question": "When does your current work permit expire?",
+            "type": "date",
+            "next": "same_employer"
+        },
+        {
+            "id": "same_employer",
+            "title": "Employer",
+            "question": "Are you still working for the same employer and in the same occupation as when you got your permit?",
+            "type": "radio",
+            "options": [
+                "Yes",
+                "No"
+            ],
+            "next": "salary"
+        },
+        {
+            "id": "salary",
+            "title": "Salary",
+            "question": "What is your current monthly salary before tax (SEK)?",
+            "type": "text",
+            "next": null
+        }
+    ]
+}
