@@ -4,3 +4,4 @@ python-dotenv==1.0.1
 pydantic-settings==2.1.0
 python-multipart==0.0.9
 ruff==0.3.4
+google-generativeai==0.4.1
