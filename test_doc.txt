@@ -1,0 +1,4 @@
+This is a sample contract.
+1. Confidentiality: User shall keep all data secret.
+2. Termination: This agreement can be terminated with 30 days notice.
+3. Risk: If you break the rules, you pay a fine.

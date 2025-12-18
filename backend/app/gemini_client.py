@@ -1,9 +1,10 @@
 import google.generativeai as genai
 from typing import List
 from app.config import settings
-from app.schemas import Document
+from app.schemas import Document, AnalysisResult
 import logging
 import random
+import json
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -67,3 +68,52 @@ Answer (in Swedish or English as appropriate):"""
     except Exception as e:
         logger.error(f"Error calling Gemini RAG: {e}")
         return f"Simulated RAG (Error): Could not generate answer using context. (API Error: {str(e)})"
+
+def analyze_document(text: str, filename: str) -> AnalysisResult:
+    """
+    Analyzes the provided document text and returns a structured summary.
+    """
+    prompt = f"""You are Clarus, a legal AI assistant. Analyze the following document text from "{filename}".
+Provide a structured analysis in valid JSON format with the following keys:
+- "summary": A brief summary of the document (max 3 sentences).
+- "key_points": A list of 3-5 crucial points or clauses.
+- "risks": A list of potential risks or unfavorable terms for the user.
+- "suggested_questions": A list of 3 follow-up questions the user might want to ask about this document.
+
+IMPORTANT: This is for informational purposes only. Do not provide legal advice.
+
+Document Text (truncated if too long):
+{text[:10000]}
+"""
+
+    api_key = settings.GEMINI_API_KEY
+    
+    # Simulation
+    if not api_key or "placeholder" in api_key.lower():
+         logger.warning("Gemini Analysis: Key missing/placeholder. Returning simulated analysis.")
+         return AnalysisResult(
+             summary=f"This appears to be a document named '{filename}'. It discusses terms and conditions common in such agreements.",
+             key_points=["Term 1: Confidentiality obligation.", "Term 2: Termination notice of 3 months.", "Term 3: Non-compete clause."],
+             risks=["Ambiguous definition of 'Confidential Information'.", "Unilateral termination rights."],
+             suggested_questions=["What is the notice period?", "Are there penalties for early termination?", "Is the non-compete enforceable?"]
+         )
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(prompt)
+        
+        # Clean up code blocks if Gemini wraps JSON in ```json ... ```
+        clean_text = response.text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(clean_text)
+        
+        return AnalysisResult(**data)
+    except Exception as e:
+        logger.error(f"Error analyzing document: {e}")
+        # Fallback to avoid crash
+        return AnalysisResult(
+            summary="Error analyzing document.",
+            key_points=["Could not extract points due to an error."],
+            risks=[],
+            suggested_questions=[]
+        )

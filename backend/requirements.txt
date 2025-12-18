@@ -3,5 +3,6 @@ uvicorn[standard]==0.27.1
 python-dotenv==1.0.1
 pydantic-settings==2.1.0
 python-multipart==0.0.9
+pypdf==4.1.0
 ruff==0.3.4
 google-generativeai==0.4.1

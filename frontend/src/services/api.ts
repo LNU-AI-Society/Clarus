@@ -23,3 +23,19 @@ export const sendMessage = async (message: string, history: { role: string; cont
     const data: ChatResponse = await response.json();
     return data;
 };
+
+export const analyzeDocument = async (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/documents/analyze`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error(`Analysis Error: ${response.statusText}`);
+    }
+
+    return await response.json();
+};

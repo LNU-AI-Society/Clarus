@@ -5,9 +5,10 @@ import ChatMessage from './ChatMessage';
 interface ChatWindowProps {
     messages: Message[];
     isLoading: boolean;
+    onQuestionClick?: (q: string) => void;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading, onQuestionClick }) => {
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -23,7 +24,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
                     </div>
                 ) : (
                     messages.map((msg) => (
-                        <ChatMessage key={msg.id} message={msg} />
+                        <ChatMessage key={msg.id} message={msg} onQuestionClick={onQuestionClick} />
                     ))
                 )}
 

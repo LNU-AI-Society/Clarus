@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import chat
+from app.routers import chat, documents
 
 app = FastAPI(title="Clarus API", version="0.1.0")
 
@@ -20,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(chat.router)
+app.include_router(documents.router)
 
 @app.get("/health")
 async def health_check():

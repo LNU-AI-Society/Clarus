@@ -2,20 +2,21 @@ import React, { useState } from 'react';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import { Message } from '../types';
-import { sendMessage } from '../services/api';
+import { sendMessage, analyzeDocument } from '../services/api';
+import FileUploadArea from '../components/chat/FileUploadArea';
 
 const ChatPage = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSend = async () => {
-        if (!userInput.trim() || isLoading) return;
+    const handleSend = async (text: string = userInput) => {
+        if (!text.trim() || isLoading) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
             role: 'user',
-            text: userInput.trim()
+            text: text.trim()
         };
 
         setMessages(prev => [...prev, userMsg]);
@@ -23,7 +24,6 @@ const ChatPage = () => {
         setIsLoading(true);
 
         try {
-            // Build history for API (excluding temporary error messages if we had any)
             const history = messages
                 .filter(m => !m.isError)
                 .map(m => ({ role: m.role, content: m.text }));
@@ -52,16 +52,57 @@ const ChatPage = () => {
         }
     };
 
+    const handleFileSelect = async (file: File) => {
+        setIsLoading(true);
+        // Add a "User uploaded file" message
+        const uploadMsg: Message = {
+            id: Date.now().toString(),
+            role: 'user',
+            text: `Uploaded document: ${file.name}`
+        };
+        setMessages(prev => [...prev, uploadMsg]);
+
+        try {
+            const result = await analyzeDocument(file);
+
+            const botMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'model',
+                text: "I've analyzed the document. Here is a summary of the key points and risks:",
+                analysis: result
+            };
+            setMessages(prev => [...prev, botMsg]);
+
+        } catch (error) {
+            console.error(error);
+            const errorMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'model',
+                text: 'Failed to analyze document. Please try again.',
+                isError: true
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="flex flex-col h-screen bg-white">
-            {/* Header can go here optionally */}
+            <ChatWindow
+                messages={messages}
+                isLoading={isLoading}
+                onQuestionClick={(q) => handleSend(q)}
+            />
 
-            <ChatWindow messages={messages} isLoading={isLoading} />
+            <div className="max-w-3xl mx-auto w-full px-4">
+                <FileUploadArea onFileSelect={handleFileSelect} isLoading={isLoading} />
+            </div>
 
             <ChatInput
                 userInput={userInput}
                 setUserInput={setUserInput}
-                onSend={handleSend}
+                onSend={() => handleSend(userInput)}
                 isLoading={isLoading}
             />
         </div>

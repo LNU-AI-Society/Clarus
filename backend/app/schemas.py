@@ -16,6 +16,12 @@ class Document(BaseModel):
     snippet: str
     source_type: str = "legislation"  # or "case_law", "government_guidance"
 
+class AnalysisResult(BaseModel):
+    summary: str
+    key_points: List[str]
+    risks: List[str]
+    suggested_questions: List[str]
+
 class ChatResponse(BaseModel):
     answer: str
     citations: List[Document] = []
