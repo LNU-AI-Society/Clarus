@@ -2,7 +2,7 @@ import { ChatRequest, ChatResponse } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000'; // In prod, rely on proxy or env var
 
-export const sendMessage = async (message: string, history: { role: string; content: string }[] = []): Promise<string> => {
+export const sendMessage = async (message: string, history: { role: string; content: string }[] = []): Promise<ChatResponse> => {
     const requestBody: ChatRequest = {
         message,
         history
@@ -21,5 +21,5 @@ export const sendMessage = async (message: string, history: { role: string; cont
     }
 
     const data: ChatResponse = await response.json();
-    return data.answer;
+    return data;
 };

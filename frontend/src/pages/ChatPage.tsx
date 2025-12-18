@@ -28,12 +28,13 @@ const ChatPage = () => {
                 .filter(m => !m.isError)
                 .map(m => ({ role: m.role, content: m.text }));
 
-            const answer = await sendMessage(userMsg.text, history);
+            const { answer, citations } = await sendMessage(userMsg.text, history);
 
             const botMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'model',
-                text: answer
+                text: answer,
+                citations: citations
             };
             setMessages(prev => [...prev, botMsg]);
 

@@ -24,6 +24,25 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                         : 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm'
                     } ${message.isError ? 'bg-red-50 border-red-200 text-red-600' : ''}`}>
                     {message.text}
+
+                    {message.citations && message.citations.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-slate-100/50">
+                            <p className="text-xs font-semibold mb-2 opacity-70">Sources:</p>
+                            <div className="space-y-1">
+                                {message.citations.map((doc, idx) => (
+                                    <a
+                                        key={doc.id}
+                                        href={doc.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="block text-xs hover:underline opacity-90 truncate max-w-[250px]"
+                                    >
+                                        [{idx + 1}] {doc.title}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
