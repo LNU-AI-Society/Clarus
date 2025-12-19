@@ -1,4 +1,4 @@
-import { ChatRequest, ChatResponse } from '../types';
+import { ChatRequest, ChatResponse, WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000'; // In prod, rely on proxy or env var
 
@@ -69,8 +69,45 @@ export const getStep = async (workflowId: string, stepId: string): Promise<Guide
 
 export const submitAnswer = async (sessionId: string, answer: string): Promise<GuidedSession> => {
     const response = await fetch(`${API_BASE_URL}/api/guided/answer?session_id=${sessionId}&answer=${encodeURIComponent(answer)}`, {
-        method: 'POST'
     });
     if (!response.ok) throw new Error('Failed to submit answer');
+    return await response.json();
+};
+
+// Auth
+export interface UserToken {
+    access_token: string;
+    token_type: string;
+}
+
+export const registerUser = async (email: string, password: string, fullName: string): Promise<UserToken> => {
+    const response = await fetch(`${API_BASE_URL}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: fullName })
+    });
+    if (!response.ok) throw new Error('Registration failed');
+    return await response.json();
+};
+
+export const loginUser = async (email: string, password: string): Promise<UserToken> => {
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+
+    const response = await fetch(`${API_BASE_URL}/api/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+    });
+    if (!response.ok) throw new Error('Login failed');
+    return await response.json();
+};
+
+export const getHistory = async (token: string): Promise<GuidedSession[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/guided/history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) return [];
     return await response.json();
 };

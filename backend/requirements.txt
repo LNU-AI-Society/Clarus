@@ -6,3 +6,7 @@ python-multipart==0.0.9
 pypdf==4.1.0
 ruff==0.3.4
 google-generativeai==0.4.1
+sqlmodel==0.0.16
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.9

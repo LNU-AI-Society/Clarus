@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional, Dict
 from app.schemas import WorkflowMetadata, GuidedSession, GuidedStep, GuidedTask
+from app.database import get_session
+from app.auth import get_current_user
+from app.models.user import User
+from app.models.guided import GuidedSessionDB
+from sqlmodel import Session, select
 import json
 import uuid
 import os
 
 router = APIRouter()
-
-# In-memory session store (replace with DB later)
-SESSIONS: Dict[str, GuidedSession] = {}
 
 # Load workflows
 WORKFLOWS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "workflows")
@@ -36,7 +38,11 @@ def list_workflows():
     ]
 
 @router.post("/api/guided/start", response_model=GuidedSession)
-def start_session(workflow_id: str):
+def start_session(
+    workflow_id: str, 
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
     if workflow_id not in WORKFLOWS:
         raise HTTPException(status_code=404, detail="Workflow not found")
     
@@ -44,51 +50,82 @@ def start_session(workflow_id: str):
     first_step_id = workflow["steps"][0]["id"]
     
     session_id = str(uuid.uuid4())
-    session = GuidedSession(
+    
+    db_session = GuidedSessionDB(
         id=session_id,
+        user_id=user.id,
         workflow_id=workflow_id,
         current_step_id=first_step_id,
-        answers={},
-        is_complete=False
+        answers_json="{}"
     )
-    SESSIONS[session_id] = session
-    return session
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    
+    return GuidedSession(
+        id=db_session.id,
+        workflow_id=db_session.workflow_id,
+        current_step_id=db_session.current_step_id,
+        answers={},
+        is_complete=False,
+        tasks=[],
+        warnings=[]
+    )
 
 @router.post("/api/guided/answer", response_model=GuidedSession)
-def answer_question(session_id: str, answer: str):
-    if session_id not in SESSIONS:
+def answer_question(
+    session_id: str, 
+    answer: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    db_session = db.get(GuidedSessionDB, session_id)
+    if not db_session or db_session.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    session = SESSIONS[session_id]
-    workflow = WORKFLOWS[session.workflow_id]
+    workflow = WORKFLOWS[db_session.workflow_id]
+    answers = json.loads(db_session.answers_json)
     
     # Save answer
-    if session.current_step_id:
-        session.answers[session.current_step_id] = answer
+    if db_session.current_step_id:
+        answers[db_session.current_step_id] = answer
+        db_session.answers_json = json.dumps(answers)
         
         # Determine next step
-        current_step = next((s for s in workflow["steps"] if s["id"] == session.current_step_id), None)
+        current_step = next((s for s in workflow["steps"] if s["id"] == db_session.current_step_id), None)
         if current_step:
             next_step_id = current_step.get("next")
-            
-            # Simple branching logic if "next" is missing or logic needed
-            # For now, we assume simple linear or explicit next, 
-            # but if we wanted branching we'd check `options` etc.
-            # (The JSONs I created use simple linear for now)
-            
-            session.current_step_id = next_step_id
+            db_session.current_step_id = next_step_id
             
             if not next_step_id:
-                session.is_complete = True
-                _generate_tasks_and_warnings(session)
+                db_session.is_complete = True
+                _generate_tasks_and_warnings_db(db_session)
 
-    return session
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+
+    return _map_to_schema(db_session)
 
 @router.get("/api/guided/session/{session_id}", response_model=GuidedSession)
-def get_session(session_id: str):
-    if session_id not in SESSIONS:
+def get_session_api(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    db_session = db.get(GuidedSessionDB, session_id)
+    if not db_session or db_session.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
-    return SESSIONS[session_id]
+    return _map_to_schema(db_session)
+
+@router.get("/api/guided/history", response_model=List[GuidedSession])
+def get_session_history(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    statement = select(GuidedSessionDB).where(GuidedSessionDB.user_id == user.id)
+    results = db.exec(statement).all()
+    return [_map_to_schema(s) for s in results]
 
 @router.get("/api/guided/step/{workflow_id}/{step_id}", response_model=GuidedStep)
 def get_step(workflow_id: str, step_id: str):
@@ -103,32 +140,52 @@ def get_step(workflow_id: str, step_id: str):
         
     return GuidedStep(**step)
 
+def _map_to_schema(db_s: GuidedSessionDB) -> GuidedSession:
+    tasks = [GuidedTask(**t) for t in json.loads(db_s.tasks_json)]
+    warnings = json.loads(db_s.warnings_json)
+    return GuidedSession(
+        id=db_s.id,
+        workflow_id=db_s.workflow_id,
+        current_step_id=db_s.current_step_id,
+        answers=json.loads(db_s.answers_json),
+        is_complete=db_s.is_complete,
+        tasks=tasks,
+        warnings=warnings
+    )
 
-def _generate_tasks_and_warnings(session: GuidedSession):
+def _generate_tasks_and_warnings_db(session: GuidedSessionDB):
     """
     Simple rule-based analysis based on answers.
+    Directly modifies the DB object.
     """
+    answers = json.loads(session.answers_json)
+    tasks = []
+    warnings = []
+
     # Renewal Logic
     if session.workflow_id == "renewal":
-        expiry = session.answers.get("expiry_date")
+        expiry = answers.get("expiry_date")
         if expiry:
-             session.tasks.append(GuidedTask(id="t1", title="Submit Application", description=f"Submit before {expiry}"))
-             session.warnings.append("Ensure your passport is valid during the processing time.")
+             tasks.append({"id":"t1", "title":"Submit Application", "description":f"Submit before {expiry}"})
+             warnings.append("Ensure your passport is valid during the processing time.")
     
     # Change Employer
     elif session.workflow_id == "change_employer":
-        time_held = session.answers.get("permit_duration")
+        time_held = answers.get("permit_duration")
         if time_held == "Less than 24 months":
-            session.warnings.append("Changing employer within the first 24 months requires a new application.")
-            session.tasks.append(GuidedTask(id="t2", title="Apply for New Permit", description="Submit application before starting new job."))
+            warnings.append("Changing employer within the first 24 months requires a new application.")
+            tasks.append({"id":"t2", "title":"Apply for New Permit", "description":"Submit application before starting new job."})
         else:
-            session.tasks.append(GuidedTask(id="t3", title="Check Sector", description="If strictly changing occupation, new permit needed. If same occupation, no new permit needed."))
+            tasks.append({"id":"t3", "title":"Check Sector", "description":"If strictly changing occupation, new permit needed. If same occupation, no new permit needed."})
 
     # Job Loss
     elif session.workflow_id == "job_loss":
-        session.warnings.append("You have 3 months to find a new job from termination date.")
-        session.tasks.append(GuidedTask(id="t4", title="Register with Arbetsförmedlingen", description="Do this immediately on your first unemployed day."))
+        warnings.append("You have 3 months to find a new job from termination date.")
+        tasks.append({"id":"t4", "title":"Register with Arbetsförmedlingen", "description":"Do this immediately on your first unemployed day."})
 
     # General fallback
-    if not session.tasks:
-        session.tasks.append(GuidedTask(id="t_gen", title="Review Requirements", description="Check Migration Agency website."))
+    if not tasks:
+        tasks.append({"id":"t_gen", "title":"Review Requirements", "description":"Check Migration Agency website."})
+
+    session.tasks_json = json.dumps(tasks)
+    session.warnings_json = json.dumps(warnings)
