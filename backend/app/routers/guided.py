@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional, Dict
-from app.schemas import WorkflowMetadata, GuidedSession, GuidedStep, GuidedTask
-from app.database import get_session
-from app.auth import get_current_user
-from app.models.user import User
-from app.models.guided import GuidedSessionDB
-from sqlmodel import Session, select
 import json
-import uuid
 import os
+import uuid
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
+
+from app.auth import get_current_user
+from app.database import get_session
+from app.models.guided import GuidedSessionDB
+from app.models.user import User
+from app.schemas import GuidedSession, GuidedStep, GuidedTask, WorkflowMetadata
 
 router = APIRouter()
 
@@ -39,18 +41,18 @@ def list_workflows():
 
 @router.post("/api/guided/start", response_model=GuidedSession)
 def start_session(
-    workflow_id: str, 
+    workflow_id: str,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     if workflow_id not in WORKFLOWS:
         raise HTTPException(status_code=404, detail="Workflow not found")
-    
+
     workflow = WORKFLOWS[workflow_id]
     first_step_id = workflow["steps"][0]["id"]
-    
+
     session_id = str(uuid.uuid4())
-    
+
     db_session = GuidedSessionDB(
         id=session_id,
         user_id=user.id,
@@ -61,7 +63,7 @@ def start_session(
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
-    
+
     return GuidedSession(
         id=db_session.id,
         workflow_id=db_session.workflow_id,
@@ -74,7 +76,7 @@ def start_session(
 
 @router.post("/api/guided/answer", response_model=GuidedSession)
 def answer_question(
-    session_id: str, 
+    session_id: str,
     answer: str,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
@@ -82,21 +84,21 @@ def answer_question(
     db_session = db.get(GuidedSessionDB, session_id)
     if not db_session or db_session.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     workflow = WORKFLOWS[db_session.workflow_id]
     answers = json.loads(db_session.answers_json)
-    
+
     # Save answer
     if db_session.current_step_id:
         answers[db_session.current_step_id] = answer
         db_session.answers_json = json.dumps(answers)
-        
+
         # Determine next step
         current_step = next((s for s in workflow["steps"] if s["id"] == db_session.current_step_id), None)
         if current_step:
             next_step_id = current_step.get("next")
             db_session.current_step_id = next_step_id
-            
+
             if not next_step_id:
                 db_session.is_complete = True
                 _generate_tasks_and_warnings_db(db_session)
@@ -131,13 +133,13 @@ def get_session_history(
 def get_step(workflow_id: str, step_id: str):
     if workflow_id not in WORKFLOWS:
          raise HTTPException(status_code=404, detail="Workflow not found")
-    
+
     workflow = WORKFLOWS[workflow_id]
     step = next((s for s in workflow["steps"] if s["id"] == step_id), None)
-    
+
     if not step:
         raise HTTPException(status_code=404, detail="Step not found")
-        
+
     return GuidedStep(**step)
 
 def _map_to_schema(db_s: GuidedSessionDB) -> GuidedSession:
@@ -168,7 +170,7 @@ def _generate_tasks_and_warnings_db(session: GuidedSessionDB):
         if expiry:
              tasks.append({"id":"t1", "title":"Submit Application", "description":f"Submit before {expiry}"})
              warnings.append("Ensure your passport is valid during the processing time.")
-    
+
     # Change Employer
     elif session.workflow_id == "change_employer":
         time_held = answers.get("permit_duration")

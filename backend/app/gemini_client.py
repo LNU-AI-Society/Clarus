@@ -1,10 +1,11 @@
-import google.generativeai as genai
-from typing import List
-from app.config import settings
-from app.schemas import Document, AnalysisResult
-import logging
-import random
 import json
+import logging
+from typing import List
+
+import google.generativeai as genai
+
+from app.config import settings
+from app.schemas import AnalysisResult, Document
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ def ask_gemini(prompt: str) -> str:
     If the API key is invalid or a placeholder, returns a simulated response.
     """
     api_key = settings.GEMINI_API_KEY
-    
+
     # Simulation mode if key is missing or clearly a placeholder
     if not api_key or "placeholder" in api_key.lower():
         logger.warning("Gemini API Key is missing or placeholder. Returning simulated response.")
@@ -36,7 +37,7 @@ def answer_with_context(question: str, context: List[Document]) -> str:
     """
     Generates an answer based on the provided context passages.
     """
-    
+
     context_text = "\n\n".join([f"Source [{i+1}] ({doc.title}): {doc.snippet}" for i, doc in enumerate(context)])
 
     rag_prompt = f"""You are Clarus, a helpful Swedish legal assistant.
@@ -87,7 +88,7 @@ Document Text (truncated if too long):
 """
 
     api_key = settings.GEMINI_API_KEY
-    
+
     # Simulation
     if not api_key or "placeholder" in api_key.lower():
          logger.warning("Gemini Analysis: Key missing/placeholder. Returning simulated analysis.")
@@ -102,11 +103,11 @@ Document Text (truncated if too long):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(prompt)
-        
+
         # Clean up code blocks if Gemini wraps JSON in ```json ... ```
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_text)
-        
+
         return AnalysisResult(**data)
     except Exception as e:
         logger.error(f"Error analyzing document: {e}")

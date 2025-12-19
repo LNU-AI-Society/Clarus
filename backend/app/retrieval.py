@@ -1,6 +1,8 @@
 from typing import List
-from app.schemas import Document
+
 from app.data.legislation import LEGISLATION_DOCS
+from app.schemas import Document
+
 
 def retrieve_context(query: str) -> List[Document]:
     """
@@ -9,7 +11,7 @@ def retrieve_context(query: str) -> List[Document]:
     """
     query_lower = query.lower()
     results = []
-    
+
     # Simple keyword matching
     keywords = {
         "uppsäg": ["uppsägning", "las"],
@@ -21,7 +23,7 @@ def retrieve_context(query: str) -> List[Document]:
 
     # If query matches a keyword concept, grab all relevant docs
     # Otherwise, do a naive text search
-    
+
     found_concepts = False
     for concept, terms in keywords.items():
         if concept in query_lower:
@@ -31,7 +33,7 @@ def retrieve_context(query: str) -> List[Document]:
                     if doc not in results:
                         results.append(doc)
             found_concepts = True
-    
+
     # Fallback to broad search if no specific concept logic triggered
     if not results:
         for doc in LEGISLATION_DOCS:

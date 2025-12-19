@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
-import { getWorkflows, startSession, getSession, getStep, submitAnswer } from '../services/api';
+import { getWorkflows, startSession, getStep, submitAnswer } from '../services/api';
 import { ArrowRight, CheckCircle, AlertTriangle, Calendar, ChevronRight } from 'lucide-react';
 
 const GuidedPage = () => {
@@ -182,8 +182,8 @@ const GuidedPage = () => {
                                 key={opt}
                                 onClick={() => { setAnswer(opt); }}
                                 className={`p-4 rounded-xl border text-left transition-all ${answer === opt
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                                        : 'hover:border-slate-400 hover:bg-slate-50'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                                    : 'hover:border-slate-400 hover:bg-slate-50'
                                     }`}
                             >
                                 {opt}

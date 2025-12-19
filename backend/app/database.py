@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session
-from app.config import settings
+from sqlmodel import Session, SQLModel, create_engine
 
 # Use a local SQLite database file
 sqlite_file_name = "clarus.db"

@@ -1,27 +1,29 @@
-from app.schemas import ChatRequest, ChatResponse, Document
-from app.gemini_client import ask_gemini, answer_with_context
-from app.retrieval import retrieve_context
-from typing import List, Optional
+import json
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
-from app.database import get_session
+
 from app.auth import get_current_user
-from app.models.user import User
+from app.database import get_session
+from app.gemini_client import answer_with_context, ask_gemini
 from app.models.chat import ChatMessageDB
-import json
+from app.models.user import User
+from app.retrieval import retrieve_context
+from app.schemas import ChatRequest, ChatResponse, Document
 
 router = APIRouter()
 
 @router.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(
-    request: ChatRequest, 
+    request: ChatRequest,
     user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     try:
         # RAG flow
         docs = retrieve_context(request.message)
-        
+
         # Get answer from Gemini
         if docs:
             answer_text = answer_with_context(request.message, docs)
@@ -29,7 +31,7 @@ async def chat_endpoint(
         else:
             answer_text = ask_gemini(request.message)
             sources = []
-        
+
         # Format citations
         citations = []
         citations_json = "[]"
@@ -54,7 +56,7 @@ async def chat_endpoint(
                 content=request.message
             )
             session.add(user_msg)
-            
+
             # Save AI Response
             ai_msg = ChatMessageDB(
                 user_id=user.id,

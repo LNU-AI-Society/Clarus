@@ -1,9 +1,10 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from typing import Optional
-from app.schemas import AnalysisResult
-from app.gemini_client import analyze_document
-from pypdf import PdfReader
 import io
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from pypdf import PdfReader
+
+from app.gemini_client import analyze_document
+from app.schemas import AnalysisResult
 
 router = APIRouter()
 
@@ -11,13 +12,13 @@ router = APIRouter()
 async def analyze_docs(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
-    
+
     filename = file.filename.lower()
     text = ""
 
     try:
         contents = await file.read()
-        
+
         if filename.endswith(".pdf"):
             # Extract text from PDF
             pdf_file = io.BytesIO(contents)
@@ -32,7 +33,7 @@ async def analyze_docs(file: UploadFile = File(...)):
                  text = contents.decode("utf-8")
              except:
                  raise HTTPException(status_code=400, detail="Unsupported file type. Please upload PDF or Text.")
-                 
+
         if not text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from document.")
 

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/data:/app/data
+      - ./backend/clarus.db:/app/clarus.db
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80" # Nginx runs on 80
+    depends_on:
+      - backend
