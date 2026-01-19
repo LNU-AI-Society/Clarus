@@ -27,7 +27,7 @@ export const sendMessage = async (
   return data;
 };
 
-export const analyzeDocument = async (file: File): Promise<any> => {
+export const analyzeDocument = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
 
