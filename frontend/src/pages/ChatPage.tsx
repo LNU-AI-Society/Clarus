@@ -1,112 +1,110 @@
-import { useState } from 'react';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
-import { Message } from '../types';
-import { sendMessage, analyzeDocument } from '../services/api';
 import FileUploadArea from '../components/chat/FileUploadArea';
+import { sendMessage, analyzeDocument } from '../services/api';
+import { Message } from '../types';
+import { useState } from 'react';
 
 const ChatPage = () => {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [userInput, setUserInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [userInput, setUserInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSend = async (text: string = userInput) => {
-        if (!text.trim() || isLoading) return;
+  const handleSend = async (text: string = userInput) => {
+    if (!text.trim() || isLoading) return;
 
-        const userMsg: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            text: text.trim()
-        };
-
-        setMessages(prev => [...prev, userMsg]);
-        setUserInput('');
-        setIsLoading(true);
-
-        try {
-            const history = messages
-                .filter(m => !m.isError)
-                .map(m => ({ role: m.role, content: m.text }));
-
-            const { answer, citations } = await sendMessage(userMsg.text, history);
-
-            const botMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'model',
-                text: answer,
-                citations: citations
-            };
-            setMessages(prev => [...prev, botMsg]);
-
-        } catch (error) {
-            console.error(error);
-            const errorMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'model',
-                text: 'Sorry, something went wrong. Please try again.',
-                isError: true
-            };
-            setMessages(prev => [...prev, errorMsg]);
-        } finally {
-            setIsLoading(false);
-        }
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: text.trim(),
     };
 
-    const handleFileSelect = async (file: File) => {
-        setIsLoading(true);
-        // Add a "User uploaded file" message
-        const uploadMsg: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            text: `Uploaded document: ${file.name}`
-        };
-        setMessages(prev => [...prev, uploadMsg]);
+    setMessages((prev) => [...prev, userMsg]);
+    setUserInput('');
+    setIsLoading(true);
 
-        try {
-            const result = await analyzeDocument(file);
+    try {
+      const history = messages
+        .filter((m) => !m.isError)
+        .map((m) => ({ role: m.role, content: m.text }));
 
-            const botMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'model',
-                text: "I've analyzed the document. Here is a summary of the key points and risks:",
-                analysis: result
-            };
-            setMessages(prev => [...prev, botMsg]);
+      const { answer, citations } = await sendMessage(userMsg.text, history);
 
-        } catch (error) {
-            console.error(error);
-            const errorMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'model',
-                text: 'Failed to analyze document. Please try again.',
-                isError: true
-            };
-            setMessages(prev => [...prev, errorMsg]);
-        } finally {
-            setIsLoading(false);
-        }
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: answer,
+        citations: citations,
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      console.error(error);
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: 'Sorry, something went wrong. Please try again.',
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFileSelect = async (file: File) => {
+    setIsLoading(true);
+    // Add a "User uploaded file" message
+    const uploadMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: `Uploaded document: ${file.name}`,
     };
+    setMessages((prev) => [...prev, uploadMsg]);
 
-    return (
-        <div className="flex flex-col h-screen bg-white">
-            <ChatWindow
-                messages={messages}
-                isLoading={isLoading}
-                onQuestionClick={(q) => handleSend(q)}
-            />
+    try {
+      const result = await analyzeDocument(file);
 
-            <div className="max-w-3xl mx-auto w-full px-4">
-                <FileUploadArea onFileSelect={handleFileSelect} isLoading={isLoading} />
-            </div>
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: "I've analyzed the document. Here is a summary of the key points and risks:",
+        analysis: result,
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      console.error(error);
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: 'Failed to analyze document. Please try again.',
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            <ChatInput
-                userInput={userInput}
-                setUserInput={setUserInput}
-                onSend={() => handleSend(userInput)}
-                isLoading={isLoading}
-            />
-        </div>
-    );
+  return (
+    <div className="flex h-screen flex-col bg-white">
+      <ChatWindow
+        messages={messages}
+        isLoading={isLoading}
+        onQuestionClick={(q) => handleSend(q)}
+      />
+
+      <div className="mx-auto w-full max-w-3xl px-4">
+        <FileUploadArea onFileSelect={handleFileSelect} isLoading={isLoading} />
+      </div>
+
+      <ChatInput
+        userInput={userInput}
+        setUserInput={setUserInput}
+        onSend={() => handleSend(userInput)}
+        isLoading={isLoading}
+      />
+    </div>
+  );
 };
 
 export default ChatPage;
