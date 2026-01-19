@@ -2,3 +2,5 @@
 .env
 node_modules
 __pycache__
+dist
+bun.lock
