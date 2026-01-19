@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
+import { AuthProvider } from './context/AuthContext';
 import ChatPage from './pages/ChatPage';
+import DashboardPage from './pages/DashboardPage';
 import GuidedPage from './pages/GuidedPage';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
