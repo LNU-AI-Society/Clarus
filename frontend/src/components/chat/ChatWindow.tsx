@@ -19,7 +19,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading, onQuestion
     <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-8">
       <div className="mx-auto flex min-h-full max-w-3xl flex-col justify-end">
         {messages.length === 0 ? (
-          <div className="flex flex-1 select-none flex-col items-center justify-center text-slate-300">
+          <div className="flex flex-1 flex-col items-center justify-center text-slate-300 select-none">
             <p className="text-lg">Start a conversation</p>
           </div>
         ) : (

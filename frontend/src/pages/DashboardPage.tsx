@@ -60,7 +60,7 @@ const DashboardPage = () => {
                     className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
                   >
                     <div className="mb-2 flex items-start justify-between">
-                      <h3 className="font-semibold capitalize text-slate-900">
+                      <h3 className="font-semibold text-slate-900 capitalize">
                         {session.workflow_id.replace('_', ' ')}
                       </h3>
                       {session.is_complete ? (

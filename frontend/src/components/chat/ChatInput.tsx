@@ -35,14 +35,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ userInput, setUserInput, onSend, 
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask a legal question..."
-          className="max-h-[150px] w-full resize-none border-none bg-transparent py-4 pl-5 pr-12 leading-relaxed text-slate-700 placeholder-slate-400 focus:ring-0"
+          className="max-h-[150px] w-full resize-none border-none bg-transparent py-4 pr-12 pl-5 leading-relaxed text-slate-700 placeholder-slate-400 focus:ring-0"
           rows={1}
           disabled={isLoading}
         />
         <button
           onClick={onSend}
           disabled={userInput.trim() === '' || isLoading}
-          className="absolute bottom-2 right-2 rounded-full bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
+          className="absolute right-2 bottom-2 rounded-full bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
         >
           <Send className="h-5 w-5" />
         </button>

@@ -29,7 +29,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) =
 
         {/* Bubble */}
         <div
-          className={`whitespace-pre-wrap rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
+          className={`rounded-2xl p-4 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
             isUser
               ? 'rounded-tr-sm bg-blue-600 text-white'
               : 'rounded-tl-sm border border-slate-100 bg-white text-slate-700'

@@ -72,7 +72,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ analysis, onQuestionClick }
         </div>
       </div>
 
-      <p className="mt-2 text-center text-[10px] italic text-slate-400">
+      <p className="mt-2 text-center text-[10px] text-slate-400 italic">
         Clarus analysis is informational only and does not constitute legal advice.
       </p>
     </div>
