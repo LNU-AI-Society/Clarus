@@ -19,7 +19,7 @@ Clarus is an AI-powered legal assistant. It helps users understand their rights,
 
 ## Tech Stack
 
-* **Frontend:** React (TypeScript), Vite
+* **Frontend:** TypeScript (React + Vite + TailwindCSS)
 * **Backend:** Python (FastAPI)
 * **AI/LLM:** Google Gemini Pro (via Vertex AI or Gemini API)
 * **Containerization:** Docker
@@ -48,12 +48,13 @@ Clarus is an AI-powered legal assistant. It helps users understand their rights,
     Create a `.env` file in the backend directory with your `GEMINI_API_KEY`.
 
 4.  **Run Development Servers**
-    * Frontend: `npm run dev`
-    * Backend: `uvicorn app.main:app --reload`
+    * Frontend: `cd frontend && npm run dev`
+    * Backend: `cd backend && uvicorn app.main:app --reload`
 
 ## Contributing
 
-Please see our internal Notion page for the "Clarus Engineering" contribution guide, branching rules, and coding standards.
+Please see our [internal Notion page](https://www.notion.so/LNUAIS-PROJECT-1-2d0181ce5ebd804b94d0c5b1ed127060?source=copy_link&assetsVersion=23.13.20260119.1201&cookie_sync_completed=true) for the "Clarus Engineering" contribution guide, branching rules, and coding standards.
 
 ---
+
 **Disclaimer:** This application provides informational guidance only and does not constitute legal advice. Users should consult with qualified legal professionals for their specific legal situations.
