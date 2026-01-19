@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { registerUser } from '../services/api';
 import { UserPlus } from 'lucide-react';
 import React, { useState } from 'react';
@@ -37,8 +37,14 @@ const RegisterPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>
+            <label
+              htmlFor="register-name"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Full Name
+            </label>
             <input
+              id="register-name"
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -47,8 +53,14 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+            <label
+              htmlFor="register-email"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Email
+            </label>
             <input
+              id="register-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -57,8 +69,14 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+            <label
+              htmlFor="register-password"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Password
+            </label>
             <input
+              id="register-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

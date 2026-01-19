@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { getHistory } from '../services/api';
 import { GuidedSession } from '../types';
 import { FileText, CheckCircle, Clock } from 'lucide-react';
@@ -28,7 +28,11 @@ const DashboardPage = () => {
           <span className="text-2xl">🛡️</span>
           <span className="text-lg font-bold text-slate-900">My Dashboard</span>
         </div>
-        <button onClick={logout} className="text-sm text-slate-500 hover:text-slate-900">
+        <button
+          type="button"
+          onClick={logout}
+          className="text-sm text-slate-500 hover:text-slate-900"
+        >
           Logout
         </button>
       </header>
@@ -47,6 +51,7 @@ const DashboardPage = () => {
                 <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
                   <p className="mb-4 text-slate-500">No workflows started yet.</p>
                   <button
+                    type="button"
                     onClick={() => navigate('/guided')}
                     className="font-medium text-blue-600 hover:underline"
                   >
@@ -90,6 +95,7 @@ const DashboardPage = () => {
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <p className="mb-4 text-slate-500">Chat history coming soon.</p>
               <button
+                type="button"
                 onClick={() => navigate('/chat')}
                 className="font-medium text-blue-600 hover:underline"
               >
