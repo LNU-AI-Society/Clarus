@@ -174,7 +174,6 @@ Convex queries, mutations, and actions defined in `frontend/convex/*`. Guided wo
 by calling the OpenRouter API; both standard responses and streaming responses are supported via `convex/chat.ts`
 and the SSE route in `convex/http.ts`. Document analysis is currently stubbed in `convex/documents.ts`, returning a
 placeholder summary.
-> TODO: confirm whether the Python/FastAPI backend is still part of the architecture.
 
 ## Development Tools
 - Context7: use to fetch up-to-date, authoritative library documentation and API usage examples during development.
