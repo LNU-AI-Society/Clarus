@@ -3,8 +3,8 @@ import { v } from 'convex/values';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'openai/gpt-4o-mini';
-const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ??
-  {};
+const env =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
 const buildMessages = (
   message: string,

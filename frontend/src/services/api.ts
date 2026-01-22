@@ -80,7 +80,8 @@ export const streamChat = async (
         const payload = JSON.parse(data) as {
           choices?: Array<{ delta?: { content?: string }; message?: { content?: string } }>;
         };
-        const delta = payload.choices?.[0]?.delta?.content ?? payload.choices?.[0]?.message?.content;
+        const delta =
+          payload.choices?.[0]?.delta?.content ?? payload.choices?.[0]?.message?.content;
         if (delta && onChunk) {
           onChunk(delta);
         }

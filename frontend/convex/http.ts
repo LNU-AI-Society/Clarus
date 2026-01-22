@@ -1,18 +1,15 @@
-import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
+import { httpRouter } from 'convex/server';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 const DEFAULT_ORIGIN = 'http://localhost:5173';
 const SYSTEM_PROMPT =
   'You are Clarus, a helpful Swedish legal assistant. Be clear, concise, and avoid legal advice.';
-const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ??
-  {};
+const env =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
-const buildMessages = (
-  message: string,
-  history?: Array<{ role: string; content: string }>,
-) => {
+const buildMessages = (message: string, history?: Array<{ role: string; content: string }>) => {
   const mappedHistory = (history ?? []).map((item) => ({
     role: item.role === 'model' ? 'assistant' : 'user',
     content: item.content,
