@@ -7,6 +7,18 @@ const convex = convexClient as unknown as {
   action: (name: string, args?: Record<string, unknown>) => Promise<unknown>;
 };
 
+const resolveConvexSiteUrl = () => {
+  const envSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL as string | undefined;
+  const envCloudUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;
+  if (envSiteUrl) {
+    return envSiteUrl.replace(/\/$/, '');
+  }
+  if (envCloudUrl) {
+    return envCloudUrl.replace('.convex.cloud', '.convex.site').replace(/\/$/, '');
+  }
+  return 'http://localhost:3210';
+};
+
 export const sendMessage = async (
   message: string,
   history: { role: string; content: string }[] = [],
@@ -20,6 +32,63 @@ export const analyzeDocument = async (file: File) => {
     fileType: file.type || undefined,
     size: file.size,
   });
+};
+
+export const streamChat = async (
+  message: string,
+  history: { role: string; content: string }[] = [],
+  onChunk?: (chunk: string) => void,
+) => {
+  const siteUrl = resolveConvexSiteUrl();
+  const response = await fetch(`${siteUrl}/chat/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history }),
+  });
+
+  if (!response.ok || !response.body) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to stream chat response.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) {
+        continue;
+      }
+
+      const data = trimmed.replace(/^data:\s*/, '');
+      if (data === '[DONE]') {
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(data) as {
+          choices?: Array<{ delta?: { content?: string }; message?: { content?: string } }>;
+        };
+        const delta = payload.choices?.[0]?.delta?.content ?? payload.choices?.[0]?.message?.content;
+        if (delta && onChunk) {
+          onChunk(delta);
+        }
+      } catch (error) {
+        console.error('Failed to parse streaming chunk', error);
+      }
+    }
+  }
 };
 
 // Guided Mode
