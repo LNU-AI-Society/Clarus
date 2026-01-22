@@ -6,7 +6,6 @@ from sqlmodel import Field, SQLModel
 
 class GuidedSessionDB(SQLModel, table=True):
     id: str = Field(primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
     workflow_id: str
     current_step_id: Optional[str]
     answers_json: str = "{}" # JSON string of answers

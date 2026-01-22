@@ -1,122 +1,54 @@
-import { ChatRequest, ChatResponse, WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
+import { convexClient } from '../convexClient';
+import { ChatResponse, WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000'; // In prod, rely on proxy or env var
+const convex = convexClient as unknown as {
+  query: (name: string, args?: Record<string, unknown>) => Promise<unknown>;
+  mutation: (name: string, args?: Record<string, unknown>) => Promise<unknown>;
+  action: (name: string, args?: Record<string, unknown>) => Promise<unknown>;
+};
 
 export const sendMessage = async (
   message: string,
   history: { role: string; content: string }[] = [],
 ): Promise<ChatResponse> => {
-  const requestBody: ChatRequest = {
-    message,
-    history,
-  };
-
-  const response = await fetch(`${API_BASE_URL}/api/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
-  }
-
-  const data: ChatResponse = await response.json();
-  return data;
+  return (await convex.action('chat:sendMessage', { message, history })) as ChatResponse;
 };
 
 export const analyzeDocument = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await fetch(`${API_BASE_URL}/api/documents/analyze`, {
-    method: 'POST',
-    body: formData,
+  return await convex.action('documents:analyzeDocument', {
+    filename: file.name,
+    fileType: file.type || undefined,
+    size: file.size,
   });
-
-  if (!response.ok) {
-    throw new Error(`Analysis Error: ${response.statusText}`);
-  }
-
-  return await response.json();
 };
 
 // Guided Mode
 export const getWorkflows = async (): Promise<WorkflowMetadata[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/workflows`);
-  if (!response.ok) throw new Error('Failed to fetch workflows');
-  return await response.json();
+  return (await convex.query('guided:listWorkflows', {})) as WorkflowMetadata[];
 };
 
 export const startSession = async (workflowId: string): Promise<GuidedSession> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/start?workflow_id=${workflowId}`, {
-    method: 'POST',
-  });
-  if (!response.ok) throw new Error('Failed to start session');
-  return await response.json();
+  return (await convex.mutation('guided:startSession', { workflowId })) as GuidedSession;
 };
 
 export const getSession = async (sessionId: string): Promise<GuidedSession> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/session/${sessionId}`);
-  if (!response.ok) throw new Error('Failed to fetch session');
-  return await response.json();
+  return (await convex.query('guided:getSession', { sessionId })) as GuidedSession;
 };
 
 export const getStep = async (workflowId: string, stepId: string): Promise<GuidedStep> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/step/${workflowId}/${stepId}`);
-  if (!response.ok) throw new Error('Failed to fetch step');
-  return await response.json();
+  return (await convex.query('guided:getWorkflowStep', {
+    workflowId,
+    stepId,
+  })) as GuidedStep;
 };
 
 export const submitAnswer = async (sessionId: string, answer: string): Promise<GuidedSession> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/guided/answer?session_id=${sessionId}&answer=${encodeURIComponent(answer)}`,
-    {},
-  );
-  if (!response.ok) throw new Error('Failed to submit answer');
-  return await response.json();
+  return (await convex.mutation('guided:submitAnswer', {
+    sessionId,
+    answer,
+  })) as GuidedSession;
 };
 
-// Auth
-export interface UserToken {
-  access_token: string;
-  token_type: string;
-}
-
-export const registerUser = async (
-  email: string,
-  password: string,
-  fullName: string,
-): Promise<UserToken> => {
-  const response = await fetch(`${API_BASE_URL}/api/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, full_name: fullName }),
-  });
-  if (!response.ok) throw new Error('Registration failed');
-  return await response.json();
-};
-
-export const loginUser = async (email: string, password: string): Promise<UserToken> => {
-  const formData = new URLSearchParams();
-  formData.append('username', email);
-  formData.append('password', password);
-
-  const response = await fetch(`${API_BASE_URL}/api/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: formData,
-  });
-  if (!response.ok) throw new Error('Login failed');
-  return await response.json();
-};
-
-export const getHistory = async (token: string): Promise<GuidedSession[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/history`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) return [];
-  return await response.json();
+export const getHistory = async (): Promise<GuidedSession[]> => {
+  return (await convex.query('guided:getHistory', {})) as GuidedSession[];
 };

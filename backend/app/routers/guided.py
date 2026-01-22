@@ -6,10 +6,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from app.auth import get_current_user
 from app.database import get_session
 from app.models.guided import GuidedSessionDB
-from app.models.user import User
 from app.schemas import GuidedSession, GuidedStep, GuidedTask, WorkflowMetadata
 
 router = APIRouter()
@@ -42,7 +40,6 @@ def list_workflows():
 @router.post("/api/guided/start", response_model=GuidedSession)
 def start_session(
     workflow_id: str,
-    user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     if workflow_id not in WORKFLOWS:
@@ -55,7 +52,6 @@ def start_session(
 
     db_session = GuidedSessionDB(
         id=session_id,
-        user_id=user.id,
         workflow_id=workflow_id,
         current_step_id=first_step_id,
         answers_json="{}"
@@ -78,11 +74,10 @@ def start_session(
 def answer_question(
     session_id: str,
     answer: str,
-    user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     db_session = db.get(GuidedSessionDB, session_id)
-    if not db_session or db_session.user_id != user.id:
+    if not db_session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     workflow = WORKFLOWS[db_session.workflow_id]
@@ -112,20 +107,18 @@ def answer_question(
 @router.get("/api/guided/session/{session_id}", response_model=GuidedSession)
 def get_session_api(
     session_id: str,
-    user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     db_session = db.get(GuidedSessionDB, session_id)
-    if not db_session or db_session.user_id != user.id:
+    if not db_session:
         raise HTTPException(status_code=404, detail="Session not found")
     return _map_to_schema(db_session)
 
 @router.get("/api/guided/history", response_model=List[GuidedSession])
 def get_session_history(
-    user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
-    statement = select(GuidedSessionDB).where(GuidedSessionDB.user_id == user.id)
+    statement = select(GuidedSessionDB)
     results = db.exec(statement).all()
     return [_map_to_schema(s) for s in results]
 
