@@ -113,10 +113,8 @@ export const loginUser = async (email: string, password: string): Promise<UserTo
   return await response.json();
 };
 
-export const getHistory = async (token: string): Promise<GuidedSession[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/guided/history`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getHistory = async (): Promise<GuidedSession[]> => {
+  const response = await fetch(`${API_BASE_URL}/api/guided/history`);
   if (!response.ok) return [];
   return await response.json();
 };
