@@ -1,14 +1,43 @@
 import { getWorkflows, startSession, getStep, submitAnswer } from '../services/api';
 import { WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
-import { ArrowRight, CheckCircle, AlertTriangle, Calendar, ChevronRight } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const GuidedPage = () => {
+  const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<WorkflowMetadata[]>([]);
   const [session, setSession] = useState<GuidedSession | null>(null);
   const [currentStep, setCurrentStep] = useState<GuidedStep | null>(null);
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const navbar = (
+    <header className="w-full border-b border-blue-200/50 bg-blue-500/10 shadow-[0_0_35px_rgba(37,99,235,0.45)] backdrop-blur">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-800"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        <button
+          onClick={() => window.location.href = '/guided/history'}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          View History →
+        </button>
+      </div>
+    </header>
+  );
 
   // Initial load
   useEffect(() => {
@@ -55,34 +84,29 @@ const GuidedPage = () => {
   // 1. Home: Workflow List
   if (!session) {
     return (
-      <div className="mx-auto max-w-4xl p-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="mb-2 text-3xl font-bold text-slate-900">Guided Mode</h1>
-            <p className="text-slate-500">Select a scenario to get step-by-step guidance.</p>
-          </div>
-          <button
-            onClick={() => window.location.href = '/guided/history'}
-            className="text-sm font-medium text-purple-600 hover:text-purple-700"
-          >
-            View History →
-          </button>
+      <div className="min-h-screen">
+        {navbar}
+        <div className="mx-auto max-w-4xl p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Guided Mode</h1>
+          <p className="text-slate-500">Select a scenario to get step-by-step guidance.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {workflows.map((wf) => (
-            <div
-              key={wf.id}
-              onClick={() => handleStart(wf.id)}
-              className="group cursor-pointer rounded-xl border bg-white p-6 transition-all hover:border-blue-400 hover:shadow-md"
-            >
-              <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-slate-800 group-hover:text-blue-600">
-                {wf.title}
-                <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500" />
-              </h3>
-              <p className="text-sm text-slate-600">{wf.description}</p>
-            </div>
-          ))}
+          <div className="grid gap-4 md:grid-cols-2">
+            {workflows.map((wf) => (
+              <div
+                key={wf.id}
+                onClick={() => handleStart(wf.id)}
+                className="group cursor-pointer rounded-xl border border-white/60 bg-white/60 p-6 shadow-xl backdrop-blur transition-all hover:border-blue-200 hover:shadow-2xl"
+              >
+                <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-slate-800 group-hover:text-blue-600">
+                  {wf.title}
+                  <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500" />
+                </h3>
+                <p className="text-sm text-slate-600">{wf.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -91,8 +115,10 @@ const GuidedPage = () => {
   // 2. Dashboard: Completed Session
   if (session.is_complete) {
     return (
-      <div className="mx-auto max-w-4xl p-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="min-h-screen">
+        {navbar}
+        <div className="mx-auto max-w-4xl p-8">
+          <div className="rounded-2xl border border-white/60 bg-white/70 p-8 shadow-xl backdrop-blur">
           <div className="mb-6 flex items-center gap-3">
             <CheckCircle className="h-8 w-8 text-green-500" />
             <h1 className="text-2xl font-bold text-slate-900">Analysis Complete</h1>
@@ -100,7 +126,7 @@ const GuidedPage = () => {
 
           {/* Warnings */}
           {session.warnings.length > 0 && (
-            <div className="mb-8 rounded-xl border border-amber-100 bg-amber-50 p-4">
+            <div className="mb-8 rounded-xl border border-amber-100/70 bg-white/70 p-4 shadow-sm backdrop-blur">
               <h3 className="mb-3 flex items-center gap-2 font-semibold text-amber-800">
                 <AlertTriangle className="h-5 w-5" />
                 Important Warnings
@@ -124,7 +150,7 @@ const GuidedPage = () => {
             {session.tasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-start gap-4 rounded-xl border p-4 transition-colors hover:bg-slate-50"
+                className="flex items-start gap-4 rounded-xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur transition-colors hover:bg-white/80"
               >
                 <div className="mt-0.5 h-6 w-6 flex-shrink-0 rounded-full border-2 border-slate-300" />
                 <div>
@@ -144,6 +170,7 @@ const GuidedPage = () => {
           >
             ← Start another session
           </button>
+          </div>
         </div>
       </div>
     );
@@ -153,76 +180,79 @@ const GuidedPage = () => {
   if (!currentStep) return <div className="p-8 text-center text-slate-400">Loading step...</div>;
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-8">
-        <button
-          onClick={() => setSession(null)}
-          className="mb-4 text-xs text-slate-400 hover:text-slate-600"
-        >
-          Cancel
-        </button>
-        <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500" />
-        </div>
-        <h2 className="mb-2 text-2xl font-bold text-slate-900">{currentStep.title}</h2>
-        <p className="text-lg text-slate-600">{currentStep.question}</p>
-      </div>
-
-      <div className="space-y-4">
-        {currentStep.type === 'text' && (
-          <input
-            type="text"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            className="w-full rounded-xl border p-4 outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type your answer..."
-            autoFocus
-          />
-        )}
-
-        {currentStep.type === 'date' && (
-          <input
-            type="date"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            className="w-full rounded-xl border p-4 outline-none focus:ring-2 focus:ring-blue-500"
-            autoFocus
-          />
-        )}
-
-        {currentStep.type === 'radio' && currentStep.options && (
-          <div className="grid gap-3">
-            {currentStep.options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => {
-                  setAnswer(opt);
-                }}
-                className={`rounded-xl border p-4 text-left transition-all ${
-                  answer === opt
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                    : 'hover:border-slate-400 hover:bg-slate-50'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
+    <div className="min-h-screen">
+      {navbar}
+      <div className="mx-auto max-w-2xl p-8">
+        <div className="mb-8">
+          <button
+            onClick={() => setSession(null)}
+            className="mb-4 text-xs text-slate-400 hover:text-slate-600"
+          >
+            Cancel
+          </button>
+          <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500" />
           </div>
-        )}
+          <h2 className="mb-2 text-2xl font-bold text-slate-900">{currentStep.title}</h2>
+          <p className="text-lg text-slate-600">{currentStep.question}</p>
+        </div>
 
-        <button
-          onClick={handleAnswer}
-          disabled={!answer || isLoading}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-semibold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isLoading ? (
-            'Processing...'
-          ) : (
-            <>
-              Next Step <ArrowRight className="h-4 w-4" />
-            </>
+        <div className="space-y-4">
+          {currentStep.type === 'text' && (
+            <input
+              type="text"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              className="w-full rounded-xl border p-4 outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Type your answer..."
+              autoFocus
+            />
           )}
-        </button>
+
+          {currentStep.type === 'date' && (
+            <input
+              type="date"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              className="w-full rounded-xl border p-4 outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+          )}
+
+          {currentStep.type === 'radio' && currentStep.options && (
+            <div className="grid gap-3">
+              {currentStep.options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    setAnswer(opt);
+                  }}
+                  className={`rounded-xl border p-4 text-left transition-all ${
+                    answer === opt
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                      : 'hover:border-slate-400 hover:bg-slate-50'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={handleAnswer}
+            disabled={!answer || isLoading}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-semibold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLoading ? (
+              'Processing...'
+            ) : (
+              <>
+                Next Step <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import {
   Calendar,
   Plus,
   ChevronRight,
+  ArrowLeft,
   FileText,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -51,18 +52,28 @@ const GuidedHistoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <FileText className="h-6 w-6 text-purple-600" />
-            <span className="text-xl font-bold text-slate-900">Session History</span>
+    <div className="min-h-screen">
+      <header className="border-b border-blue-200/50 bg-blue-500/10 shadow-[0_0_35px_rgba(37,99,235,0.45)] backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/guided')}
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-800"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <div className="flex items-center gap-3">
+              <FileText className="h-6 w-6 text-blue-600" />
+              <span className="text-xl font-bold text-slate-900">Session History</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => navigate('/guided')}
-              className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700"
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
               New Session
@@ -80,7 +91,7 @@ const GuidedHistoryPage = () => {
             </div>
           </div>
         ) : sessions.length === 0 ? (
-          <div className="mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
+          <div className="mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border border-white/60 bg-white/60 p-12 text-center shadow-xl backdrop-blur">
             <div className="mb-6 rounded-full bg-purple-50 p-6">
               <FileText className="h-12 w-12 text-purple-400" />
             </div>
@@ -109,7 +120,7 @@ const GuidedHistoryPage = () => {
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-purple-400 hover:shadow-xl"
+                  className="group flex flex-col rounded-2xl border border-white/60 bg-white/60 p-6 shadow-xl backdrop-blur transition-all duration-300 hover:border-blue-200 hover:shadow-2xl"
                 >
                   <div className="mb-4 flex items-start justify-between">
                     <div className="flex-1">
