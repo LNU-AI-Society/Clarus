@@ -41,10 +41,19 @@ const DashboardPage = () => {
         <div className="grid gap-8 md:grid-cols-2">
           {/* Workflows Section */}
           <section>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-800">
-              <FileText className="h-5 w-5 text-blue-500" />
-              My Workflows
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-800">
+                <FileText className="h-5 w-5 text-blue-500" />
+                My Workflows
+              </h2>
+              <button
+                type="button"
+                onClick={() => navigate('/guided/history')}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View All →
+              </button>
+            </div>
 
             <div className="space-y-4">
               {history.length === 0 ? (

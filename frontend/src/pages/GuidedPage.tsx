@@ -56,8 +56,18 @@ const GuidedPage = () => {
   if (!session) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <h1 className="mb-2 text-3xl font-bold text-slate-900">Guided Mode</h1>
-        <p className="mb-8 text-slate-500">Select a scenario to get step-by-step guidance.</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="mb-2 text-3xl font-bold text-slate-900">Guided Mode</h1>
+            <p className="text-slate-500">Select a scenario to get step-by-step guidance.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/guided/history'}
+            className="text-sm font-medium text-purple-600 hover:text-purple-700"
+          >
+            View History →
+          </button>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           {workflows.map((wf) => (
