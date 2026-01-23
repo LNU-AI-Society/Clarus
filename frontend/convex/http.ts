@@ -298,6 +298,7 @@ http.route({
         }
 
         const followReader = followUpResponse.body.getReader();
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           const { value, done } = await followReader.read();
           if (done) {
