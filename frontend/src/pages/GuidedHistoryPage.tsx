@@ -1,5 +1,4 @@
 import { getHistory } from '../services/api';
-import { useAuth } from '../context/useAuth';
 import { GuidedSession } from '../types';
 import {
   CheckCircle,
@@ -15,17 +14,12 @@ import { useNavigate } from 'react-router-dom';
 
 const GuidedHistoryPage = () => {
   const navigate = useNavigate();
-  const { token, isAuthenticated } = useAuth();
   const [sessions, setSessions] = useState<GuidedSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      navigate('/login');
-      return;
-    }
     setIsLoading(true);
-    getHistory(token)
+    getHistory()
       .then((data) => {
         setSessions(data);
         setIsLoading(false);
@@ -34,7 +28,7 @@ const GuidedHistoryPage = () => {
         console.error(err);
         setIsLoading(false);
       });
-  }, [isAuthenticated, token, navigate]);
+  }, []);
 
   const getWorkflowTitle = (workflowId: string) => {
     const titles: Record<string, string> = {

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:convex": "convex dev",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
@@ -14,6 +15,8 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/node": "^25.0.10",
+    "convex": "^1.9.0",
     "lucide-react": "^0.344.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "react": "^18.2.0",

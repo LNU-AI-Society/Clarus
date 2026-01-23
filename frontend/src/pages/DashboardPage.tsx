@@ -1,4 +1,3 @@
-import { useAuth } from '../context/useAuth';
 import { getHistory } from '../services/api';
 import { GuidedSession } from '../types';
 import { FileText, CheckCircle, Clock } from 'lucide-react';
@@ -6,19 +5,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const DashboardPage = () => {
-  const { token, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [history, setHistory] = useState<GuidedSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    if (token) {
-      getHistory(token).then(setHistory).catch(console.error);
-    }
-  }, [isAuthenticated, token, navigate]);
+    setIsLoading(true);
+    getHistory()
+      .then(setHistory)
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -30,10 +27,10 @@ const DashboardPage = () => {
         </div>
         <button
           type="button"
-          onClick={logout}
+          onClick={() => navigate('/')}
           className="text-sm text-slate-500 hover:text-slate-900"
         >
-          Logout
+          Back to home
         </button>
       </header>
 
@@ -56,7 +53,11 @@ const DashboardPage = () => {
             </div>
 
             <div className="space-y-4">
-              {history.length === 0 ? (
+              {isLoading ? (
+                <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+                  Loading sessions...
+                </div>
+              ) : history.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
                   <p className="mb-4 text-slate-500">No workflows started yet.</p>
                   <button

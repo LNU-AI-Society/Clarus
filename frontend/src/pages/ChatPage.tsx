@@ -1,7 +1,7 @@
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
-import { sendMessage, analyzeDocument } from '../services/api';
+import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
 import { useState } from 'react';
 
@@ -19,7 +19,14 @@ const ChatPage = () => {
       text: text.trim(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const botMsgId = (Date.now() + 1).toString();
+    const botMsg: Message = {
+      id: botMsgId,
+      role: 'model',
+      text: '',
+    };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
     setUserInput('');
     setIsLoading(true);
 
@@ -27,25 +34,52 @@ const ChatPage = () => {
       const history = messages
         .filter((m) => !m.isError)
         .map((m) => ({ role: m.role, content: m.text }));
+      let hasStreamingStarted = false;
 
-      const { answer, citations } = await sendMessage(userMsg.text, history);
+      await streamChat(userMsg.text, history, (chunk) => {
+        if (!hasStreamingStarted) {
+          hasStreamingStarted = true;
+          setIsLoading(false);
+        }
 
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: answer,
-        citations: citations,
-      };
-      setMessages((prev) => [...prev, botMsg]);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMsgId
+              ? {
+                  ...msg,
+                  text: msg.text + chunk,
+                }
+              : msg,
+          ),
+        );
+      });
+
+      if (!hasStreamingStarted) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMsgId
+              ? {
+                  ...msg,
+                  text: 'No response generated.',
+                  isError: true,
+                }
+              : msg,
+          ),
+        );
+      }
     } catch (error) {
       console.error(error);
-      const errorMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: 'Sorry, something went wrong. Please try again.',
-        isError: true,
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                text: 'Sorry, something went wrong. Please try again.',
+                isError: true,
+              }
+            : msg,
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
