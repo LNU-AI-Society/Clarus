@@ -1,1 +1,58 @@
 @import 'tailwindcss';
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.18), transparent 55%),
+    radial-gradient(circle at bottom, rgba(59, 130, 246, 0.12), transparent 50%),
+    linear-gradient(135deg, #f8fafc, #eef2ff 55%, #e2e8f0);
+}
+
+.page-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      0deg,
+      rgba(37, 99, 235, 0.34) 0%,
+      rgba(59, 130, 246, 0.22) 40%,
+      rgba(147, 197, 253, 0.12) 70%,
+      rgba(248, 250, 252, 0) 100%
+    ),
+    radial-gradient(circle at 18% 100%, rgba(59, 130, 246, 0.16), transparent 74%),
+    radial-gradient(circle at 52% 94%, rgba(96, 165, 250, 0.14), transparent 74%),
+    radial-gradient(circle at 82% 100%, rgba(37, 99, 235, 0.14), transparent 74%);
+  filter: blur(12px);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.04) 40%,
+    rgba(0, 0, 0, 0.2) 70%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.04) 40%,
+    rgba(0, 0, 0, 0.2) 70%,
+    #000 100%
+  );
+  opacity: 0;
+  transform: translateY(22%);
+  animation: introRise 2.5s ease forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes introRise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

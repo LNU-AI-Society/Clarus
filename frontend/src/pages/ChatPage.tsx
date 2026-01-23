@@ -3,9 +3,12 @@ import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
 import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
+import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ChatPage = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +123,16 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-screen flex-col">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-6">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back home
+        </button>
+      </div>
       <ChatWindow
         messages={messages}
         isLoading={isLoading}

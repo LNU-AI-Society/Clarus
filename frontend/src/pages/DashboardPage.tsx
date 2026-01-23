@@ -18,7 +18,7 @@ const DashboardPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
         <div className="flex items-center gap-2">
@@ -54,11 +54,11 @@ const DashboardPage = () => {
 
             <div className="space-y-4">
               {isLoading ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+                <div className="rounded-xl border border-white/60 bg-white/60 p-6 text-sm text-slate-500 shadow-xl backdrop-blur">
                   Loading sessions...
                 </div>
               ) : history.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+                <div className="rounded-xl border border-white/60 bg-white/60 p-8 text-center shadow-xl backdrop-blur">
                   <p className="mb-4 text-slate-500">No workflows started yet.</p>
                   <button
                     type="button"
@@ -72,7 +72,7 @@ const DashboardPage = () => {
                 history.map((session) => (
                   <div
                     key={session.id}
-                    className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+                    className="rounded-xl border border-white/60 bg-white/60 p-6 shadow-xl backdrop-blur"
                   >
                     <div className="mb-2 flex items-start justify-between">
                       <h3 className="font-semibold text-slate-900 capitalize">
@@ -102,7 +102,7 @@ const DashboardPage = () => {
               <Clock className="h-5 w-5 text-purple-500" />
               Recent Chats
             </h2>
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+            <div className="rounded-xl border border-white/60 bg-white/60 p-8 text-center shadow-xl backdrop-blur">
               <p className="mb-4 text-slate-500">Chat history coming soon.</p>
               <button
                 type="button"
