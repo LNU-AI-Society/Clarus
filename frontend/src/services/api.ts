@@ -1,5 +1,5 @@
 import { convexClient } from '../convexClient';
-import { ChatResponse, WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
+import { AnalysisResult, ChatResponse, WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
 
 const convex = convexClient as unknown as {
   query: (name: string, args?: Record<string, unknown>) => Promise<unknown>;
@@ -26,12 +26,12 @@ export const sendMessage = async (
   return (await convex.action('chat:sendMessage', { message, history })) as ChatResponse;
 };
 
-export const analyzeDocument = async (file: File) => {
-  return await convex.action('documents:analyzeDocument', {
+export const analyzeDocument = async (file: File): Promise<AnalysisResult> => {
+  return (await convex.action('documents:analyzeDocument', {
     filename: file.name,
     fileType: file.type || undefined,
     size: file.size,
-  });
+  })) as AnalysisResult;
 };
 
 export const streamChat = async (
