@@ -152,7 +152,7 @@ const GuidedPage = () => {
                 key={task.id}
                 className="flex items-start gap-4 rounded-xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur transition-colors hover:bg-white/80"
               >
-                <div className="mt-0.5 h-6 w-6 flex-shrink-0 rounded-full border-2 border-slate-300" />
+                <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-slate-300" />
                 <div>
                   <h4 className="font-medium text-slate-900">{task.title}</h4>
                   <p className="mt-1 text-sm text-slate-600">{task.description}</p>

@@ -6,10 +6,50 @@ import {
   SignUpButton,
 } from '@clerk/clerk-react';
 import { BookOpen, MessageSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const fullIntroText =
+    'Your AI-powered guide to Swedish employment and immigration law. Get instant answers or follow detailed workflows.';
+  const typingDelayMs = 1200;
+  const [typedIntroText, setTypedIntroText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setTypedIntroText(fullIntroText);
+      setIsTypingComplete(true);
+      return;
+    }
+
+    let currentIndex = 0;
+    let intervalId: number | undefined;
+    setTypedIntroText('');
+    setIsTypingComplete(false);
+
+    const timeoutId = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        currentIndex += 1;
+        setTypedIntroText(fullIntroText.slice(0, currentIndex));
+
+        if (currentIndex >= fullIntroText.length) {
+          window.clearInterval(intervalId);
+          setIsTypingComplete(true);
+        }
+      }, 45);
+    }, typingDelayMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, [fullIntroText, typingDelayMs]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -36,7 +76,7 @@ const LandingPage = () => {
             </SignedOut>
           <SignedIn>
               <SignOutButton>
-                <button className="rounded-full border border-blue-200/40 bg-blue-50/70 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:shadow-lg">
+                <button className="rounded-full border border-blue-200/40 bg-blue-50/70 px-10 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:shadow-lg">
                   Sign out
                 </button>
               </SignOutButton>
@@ -46,15 +86,20 @@ const LandingPage = () => {
       </header>
       <div className="relative z-10 flex min-h-[calc(100vh-76px)] flex-col items-center justify-center p-4">
         <div className="w-full max-w-4xl space-y-8 text-center">
-        <h1 className="text-5xl font-extrabold tracking-tight text-slate-900">
-          Clarus <span className="text-blue-600">Assistant</span>
+        <h1 className="landing-title text-5xl font-extrabold tracking-tight text-slate-900">
+          <span className="landing-title-core">Clarus</span>{' '}
+          <span className="text-blue-600">Assistant</span>
         </h1>
         <p className="mx-auto max-w-2xl text-xl text-slate-600">
-          Your AI-powered guide to Swedish employment and immigration law. Get instant answers or
-          follow detailed workflows.
+          {typedIntroText}
+          <span className="typewriter-caret" aria-hidden="true" />
         </p>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div
+          className={`landing-cards mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 ${
+            isTypingComplete ? 'landing-cards--visible' : ''
+          }`}
+        >
           <SignedIn>
             <button
               onClick={() => navigate('/chat')}

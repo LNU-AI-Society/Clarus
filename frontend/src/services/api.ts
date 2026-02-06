@@ -53,7 +53,6 @@ export const streamChat = async (
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -62,33 +61,9 @@ export const streamChat = async (
       break;
     }
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) {
-        continue;
-      }
-
-      const data = trimmed.replace(/^data:\s*/, '');
-      if (data === '[DONE]') {
-        return;
-      }
-
-      try {
-        const payload = JSON.parse(data) as {
-          choices?: Array<{ delta?: { content?: string }; message?: { content?: string } }>;
-        };
-        const delta =
-          payload.choices?.[0]?.delta?.content ?? payload.choices?.[0]?.message?.content;
-        if (delta && onChunk) {
-          onChunk(delta);
-        }
-      } catch (error) {
-        console.error('Failed to parse streaming chunk', error);
-      }
+    const chunk = decoder.decode(value, { stream: true });
+    if (chunk && onChunk) {
+      onChunk(chunk);
     }
   }
 };

@@ -56,3 +56,68 @@ body {
     transform: translateY(0);
   }
 }
+
+.landing-title-core {
+  color: #0f172a;
+  transition: text-shadow 0.35s ease, color 0.35s ease;
+}
+
+.landing-title:hover .landing-title-core {
+  color: #0f172a;
+  text-shadow: 0 0 14px rgba(37, 99, 235, 0.6), 0 0 30px rgba(37, 99, 235, 0.35);
+}
+
+.landing-cards {
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.landing-cards--visible {
+  animation: cardsPopIn 0.75s ease-out forwards;
+  pointer-events: auto;
+}
+
+@keyframes cardsPopIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.typewriter-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  margin-left: 6px;
+  background-color: currentColor;
+  animation: typewriterBlink 0.9s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes typewriterBlink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typewriter-caret {
+    animation: none;
+  }
+
+  .landing-cards {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .landing-cards--visible {
+    animation: none;
+  }
+}
