@@ -1,10 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
-  CheckCircle,
   Clock,
-  ArrowRight,
   LayoutDashboard,
   Bell
 } from 'lucide-react';
