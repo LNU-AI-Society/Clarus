@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  ArrowRight, 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  ArrowRight,
   LayoutDashboard,
   Bell
 } from 'lucide-react';
@@ -39,7 +39,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      
+
       {/* Navbar */}
       <header className="sticky top-0 z-10 border-b border-indigo-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -49,7 +49,7 @@ const DashboardPage = () => {
             </div>
             <h1 className="text-xl font-bold tracking-tight text-slate-800">Clarus Dashboard</h1>
           </div>
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
           >
@@ -59,7 +59,7 @@ const DashboardPage = () => {
       </header>
 
       <main className="mx-auto max-w-6xl p-6">
-        
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-900">Current Investigation</h2>
@@ -67,10 +67,10 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          
+
           {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* 1. Situation Summary */}
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-4 flex items-center justify-between">
@@ -127,41 +127,41 @@ const DashboardPage = () => {
 
             {/* 4. Progress Indicator */}
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
-               <h3 className="mb-6 text-lg font-bold text-slate-800">Investigation Progress</h3>
-               <div className="relative mx-auto flex h-32 w-32 items-center justify-center">
-                 {/* Circle Background */}
-                 <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
-                    <path
-                      className="text-slate-100"
-                      d="M18 2.0845
+              <h3 className="mb-6 text-lg font-bold text-slate-800">Investigation Progress</h3>
+              <div className="relative mx-auto flex h-32 w-32 items-center justify-center">
+                {/* Circle Background */}
+                <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
+                  <path
+                    className="text-slate-100"
+                    d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
                         a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    />
-                 </svg>
-                 {/* Progress Circle */}
-                 <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
-                    <path
-                      className="text-indigo-600 transition-all duration-1000 ease-out"
-                      strokeDasharray={`${mockProgress.percentage}, 100`}
-                      d="M18 2.0845
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  />
+                </svg>
+                {/* Progress Circle */}
+                <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
+                  <path
+                    className="text-indigo-600 transition-all duration-1000 ease-out"
+                    strokeDasharray={`${mockProgress.percentage}, 100`}
+                    d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
                         a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                 </svg>
-                 <div className="absolute flex flex-col items-center">
-                   <span className="text-2xl font-bold text-slate-900">{mockProgress.percentage}%</span>
-                 </div>
-               </div>
-               <div className="mt-4 text-sm text-slate-500">
-                 Step <span className="font-semibold text-slate-900">{mockProgress.currentCtep}</span> of {mockProgress.totalSteps}
-               </div>
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-2xl font-bold text-slate-900">{mockProgress.percentage}%</span>
+                </div>
+              </div>
+              <div className="mt-4 text-sm text-slate-500">
+                Step <span className="font-semibold text-slate-900">{mockProgress.currentCtep}</span> of {mockProgress.totalSteps}
+              </div>
             </section>
 
             {/* 3. Warnings Section */}
@@ -174,7 +174,7 @@ const DashboardPage = () => {
                 {mockWarnings.map((warning, idx) => (
                   <li key={idx} className="flex gap-3 text-sm text-amber-900">
                     <div className="mt-0.5">
-                        <AlertTriangle size={16} className="text-amber-600" />
+                      <AlertTriangle size={16} className="text-amber-600" />
                     </div>
                     <span>{warning}</span>
                   </li>
