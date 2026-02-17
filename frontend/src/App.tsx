@@ -3,6 +3,7 @@ import DashboardPage from './pages/DashboardPage';
 import GuidedHistoryPage from './pages/GuidedHistoryPage';
 import GuidedPage from './pages/GuidedPage';
 import LandingPage from './pages/LandingPage';
+import WorkflowsPage from './pages/WorkflowsPage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/guided" element={<GuidedPage />} />
         <Route path="/guided/history" element={<GuidedHistoryPage />} />
+        <Route path="/workflows" element={<WorkflowsPage />} />
       </Routes>
     </BrowserRouter>
   );
