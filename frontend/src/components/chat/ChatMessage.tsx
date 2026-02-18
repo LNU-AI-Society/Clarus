@@ -2,7 +2,9 @@ import { Message } from '../../types';
 import AnalysisView from './AnalysisView';
 import { User, Bot } from 'lucide-react';
 import React from 'react';
-
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 interface ChatMessageProps {
   message: Message;
   onQuestionClick?: (q: string) => void;
@@ -31,13 +33,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) =
 
         {/* Bubble */}
         <div
-          className={`rounded-2xl p-4 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
+          className={`rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
             isUser
-              ? 'rounded-tr-sm bg-[#0f7a6a] text-white'
+              ? 'rounded-tr-sm bg-[#0f7a6a] text-white whitespace-pre-wrap'
               : 'rounded-tl-sm border border-[#e5ded8] bg-[#fdfcfb] text-[#2c3b3a]'
           } ${message.isError ? 'border-red-200 bg-red-50 text-red-600' : ''}`}
         >
-          {message.text}
+          {isUser ? (
+            message.text
+          ) : (
+            <div className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1 prose-headings:mt-3 prose-headings:mb-2">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                components={{
+                  a: ({ href, children, ...props }) => (
+                    <a href={href} target="_blank" rel="noreferrer" {...props}>
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          )}
 
           {/* Analysis View */}
           {message.analysis && onQuestionClick && (
