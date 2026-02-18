@@ -1,9 +1,16 @@
 import { ConvexHttpClient } from "convex/browser";
+import dotenv from "dotenv";
 import { createReadStream, promises as fs } from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
+import { fileURLToPath } from "node:url";
 
 import type { ChunkRecord, RunManifest } from "./core/types.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 const DEFAULT_BATCH_SIZE = 12;
 const MAX_BATCH_SIZE = 24;

@@ -30,7 +30,10 @@ Site definitions live in `src/sites/` and only contain site-specific rules:
 ```bash
 cd scrapers
 npm install
+cp .env.example .env
 ```
+
+`ingest:convex` automatically loads variables from `scrapers/.env`.
 
 ## Usage
 
@@ -107,6 +110,8 @@ Set these for the local ingestion CLI (scrapers process):
 
 - `CONVEX_URL` or pass `--convex-url`
 - `RAG_INGESTION_SECRET` or `CONVEX_RAG_INGESTION_SECRET` or pass `--ingest-token`
+
+You can keep these values in `scrapers/.env`.
 
 ## JSONL schema
 
