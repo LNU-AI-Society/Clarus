@@ -1,26 +1,28 @@
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
+import LanguageSwitch from '../components/LanguageSwitch';
 import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { useTranslate } from '@tolgee/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const suggestedQuestions = [
-  'How do I apply for Swedish citizenship?',
-  'What are the requirements for a work permit?',
-  'How long does a residence permit application take?',
-  'Can I bring my family to Sweden?',
-  'What documents do I need for asylum?',
-];
-
 const ChatPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const isEmpty = messages.length === 0;
+  const suggestedQuestions = [
+    t('chat.suggested.q1'),
+    t('chat.suggested.q2'),
+    t('chat.suggested.q3'),
+    t('chat.suggested.q4'),
+    t('chat.suggested.q5'),
+  ];
 
   const handleSend = async (text: string = userInput) => {
     if (!text.trim() || isLoading) return;
@@ -69,28 +71,28 @@ const ChatPage = () => {
       if (!hasStreamingStarted) {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === botMsgId
-              ? {
-                  ...msg,
-                  text: 'No response generated.',
-                  isError: true,
-                }
-              : msg,
-          ),
+                msg.id === botMsgId
+                  ? {
+                      ...msg,
+                      text: t('chat.errors.noResponse'),
+                      isError: true,
+                    }
+                  : msg,
+              ),
         );
       }
     } catch (error) {
       console.error(error);
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === botMsgId
-            ? {
-                ...msg,
-                text: 'Sorry, something went wrong. Please try again.',
-                isError: true,
-              }
-            : msg,
-        ),
+              msg.id === botMsgId
+                ? {
+                    ...msg,
+                    text: t('chat.errors.generic'),
+                    isError: true,
+                  }
+                : msg,
+            ),
       );
     } finally {
       setIsLoading(false);
@@ -103,7 +105,7 @@ const ChatPage = () => {
     const uploadMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      text: `Uploaded document: ${file.name}`,
+      text: t('chat.uploadedDocument', { name: file.name }),
     };
     setMessages((prev) => [...prev, uploadMsg]);
 
@@ -113,7 +115,7 @@ const ChatPage = () => {
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: "I've analyzed the document. Here is a summary of the key points and risks:",
+        text: t('chat.analysis.summaryIntro'),
         analysis: result,
       };
       setMessages((prev) => [...prev, botMsg]);
@@ -122,7 +124,7 @@ const ChatPage = () => {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: 'Failed to analyze document. Please try again.',
+        text: t('chat.errors.fileAnalysisFailed'),
         isError: true,
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -140,10 +142,13 @@ const ChatPage = () => {
           type="button"
           onClick={() => navigate('/')}
           className="fixed left-4 top-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a] sm:left-6 sm:top-6"
-          aria-label="Back to home"
+          aria-label={t('chat.backToHomeAria')}
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
+        <div className="fixed right-4 top-4 z-30 sm:right-6 sm:top-6">
+          <LanguageSwitch />
+        </div>
         <main className={`flex min-h-0 flex-1 flex-col ${isEmpty ? 'pb-72' : 'pb-52 pt-16'}`}>
           {isEmpty ? (
             <div className="flex min-h-0 flex-1 flex-col justify-end gap-6">
@@ -172,7 +177,7 @@ const ChatPage = () => {
             <div className="mx-auto w-full max-w-5xl px-4 pb-3">
               <div className="mb-3 flex items-center gap-2 text-[#54605e]">
                 <Lightbulb className="h-5 w-5 text-[#0f7a6a]" />
-                <h3 className="text-sm font-semibold">Suggested questions</h3>
+                <h3 className="text-sm font-semibold">{t('chat.suggested.title')}</h3>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {suggestedQuestions.map((q, i) => (
