@@ -52,161 +52,152 @@ const GuidedHistoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-blue-200/50 bg-blue-500/10 shadow-[0_0_35px_rgba(37,99,235,0.45)] backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-4">
+    <div className="app-shell">
+      <div className="app-content min-h-screen">
+        <main className="landing-container py-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => navigate('/guided')}
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-800"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[#5c6664] transition hover:text-[#1f2937]"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <span className="text-xl font-bold text-slate-900">Session History</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => navigate('/guided')}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+              className="landing-button landing-button--primary landing-button--small"
             >
               <Plus className="h-4 w-4" />
-              New Session
+              New session
             </button>
           </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl p-6">
-        {isLoading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <div className="flex items-center gap-3 text-slate-400">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-purple-500" />
-              <span>Loading sessions...</span>
+          {isLoading ? (
+            <div className="flex min-h-[400px] items-center justify-center">
+              <div className="flex items-center gap-3 text-[#9aa2a0]">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#e5ded8] border-t-[#0f7a6a]" />
+                <span>Loading sessions...</span>
+              </div>
             </div>
-          </div>
-        ) : sessions.length === 0 ? (
-          <div className="mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border border-white/60 bg-white/60 p-12 text-center shadow-xl backdrop-blur">
-            <div className="mb-6 rounded-full bg-purple-50 p-6">
-              <FileText className="h-12 w-12 text-purple-400" />
-            </div>
-            <h2 className="mb-3 text-2xl font-bold text-slate-900">No Sessions Yet</h2>
-            <p className="mb-8 text-slate-500">
-              Start a guided workflow to see your history here. Get step-by-step guidance for common
-              immigration and employment scenarios.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/guided')}
-              className="flex items-center gap-2 rounded-xl bg-purple-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-purple-700"
-            >
-              <Plus className="h-5 w-5" />
-              Start Your First Session
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="mb-8">
-              <h1 className="mb-2 text-3xl font-bold text-slate-900">Your Guided Sessions</h1>
-              <p className="text-slate-600">View and manage your previous workflow sessions</p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="group flex flex-col rounded-2xl border border-white/60 bg-white/60 p-6 shadow-xl backdrop-blur transition-all duration-300 hover:border-blue-200 hover:shadow-2xl"
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="mb-1 text-lg font-bold text-slate-900 transition-colors group-hover:text-purple-600">
-                        {getWorkflowTitle(session.workflow_id)}
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        {getWorkflowDescription(session.workflow_id)}
-                      </p>
-                    </div>
-                    {session.is_complete ? (
-                      <span className="flex items-center gap-1 rounded-full border border-green-100 bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Complete
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
-                        <Clock className="h-3.5 w-3.5" />
-                        In Progress
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mb-4 flex flex-wrap gap-3">
-                    <div className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Session ID: {session.id.slice(0, 8)}
-                    </div>
-                    {session.tasks.length > 0 && (
-                      <div className="flex items-center gap-1.5 rounded-lg bg-purple-50 px-3 py-1.5 text-xs text-purple-700">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        {session.tasks.length} {session.tasks.length === 1 ? 'Task' : 'Tasks'}
-                      </div>
-                    )}
-                    {session.warnings.length > 0 && (
-                      <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {session.warnings.length}{' '}
-                        {session.warnings.length === 1 ? 'Warning' : 'Warnings'}
-                      </div>
-                    )}
-                  </div>
-
-                  {session.warnings.length > 0 && (
-                    <div className="mb-4 flex-1">
-                      <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
-                        <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-800">
-                          <AlertTriangle className="h-3 w-3" />
-                          {session.warnings.length === 1 ? 'Important' : 'Important Alerts'}
-                        </div>
-                        <p className="line-clamp-2 text-xs text-amber-900">{session.warnings[0]}</p>
-                        {session.warnings.length > 1 && (
-                          <p className="mt-1 text-xs text-amber-700">
-                            +{session.warnings.length - 1} more warning
-                            {session.warnings.length > 2 && 's'}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => navigate('/guided')}
-                    className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition-all hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700"
-                  >
-                    {session.is_complete ? 'View Details' : 'Resume Session'}
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex justify-center">
+          ) : sessions.length === 0 ? (
+            <div className="mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border border-[#efe7e0] bg-white/80 p-12 text-center shadow-[0_18px_40px_rgba(31,41,55,0.12)]">
+              <div className="mb-6 rounded-full bg-[#f1eee9] p-6">
+                <FileText className="h-12 w-12 text-[#6b4e42]" />
+              </div>
+              <h2 className="mb-3 text-2xl font-bold text-[#1f2937]">No sessions yet</h2>
+              <p className="mb-8 text-[#6b7280]">
+                Start a guided workflow to see your history here. Get step-by-step guidance for common
+                immigration and employment scenarios.
+              </p>
               <button
                 type="button"
                 onClick={() => navigate('/guided')}
-                className="group flex items-center gap-2 rounded-2xl bg-white px-6 py-3 font-medium text-slate-600 shadow-sm transition-all hover:border-purple-400 hover:shadow-md"
+                className="landing-button landing-button--primary"
               >
-                <Plus className="h-5 w-5 text-purple-600 transition-transform group-hover:scale-110" />
-                Start a New Guided Session
+                <Plus className="h-5 w-5" />
+                Start your first session
               </button>
             </div>
-          </>
-        )}
-      </main>
+          ) : (
+            <>
+              <div className="mb-8">
+                <h1 className="mb-2 text-3xl font-bold text-[#1f2937]">Your guided sessions</h1>
+                <p className="text-[#6b7280]">View and manage your previous workflow sessions</p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="app-card group flex flex-col p-6 transition-all duration-300 hover:-translate-y-0.5"
+                  >
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="mb-1 text-lg font-bold text-[#1f2937] transition-colors group-hover:text-[#0f7a6a]">
+                          {getWorkflowTitle(session.workflow_id)}
+                        </h3>
+                        <p className="text-sm text-[#6b7280]">
+                          {getWorkflowDescription(session.workflow_id)}
+                        </p>
+                      </div>
+                      {session.is_complete ? (
+                        <span className="flex items-center gap-1 rounded-full bg-[#e8f3f0] px-3 py-1 text-xs font-medium text-[#0f7a6a]">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Complete
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 rounded-full bg-[#f1eee9] px-3 py-1 text-xs font-medium text-[#6b6f6c]">
+                          <Clock className="h-3.5 w-3.5" />
+                          In progress
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mb-4 flex flex-wrap gap-3">
+                      <div className="flex items-center gap-1.5 rounded-lg bg-[#f9f5f1] px-3 py-1.5 text-xs text-[#6b7280]">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Session ID: {session.id.slice(0, 8)}
+                      </div>
+                      {session.tasks.length > 0 && (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-[#e8f3f0] px-3 py-1.5 text-xs text-[#0f7a6a]">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          {session.tasks.length} {session.tasks.length === 1 ? 'Task' : 'Tasks'}
+                        </div>
+                      )}
+                      {session.warnings.length > 0 && (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-[#fff7ed] px-3 py-1.5 text-xs text-amber-700">
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {session.warnings.length}{' '}
+                          {session.warnings.length === 1 ? 'Warning' : 'Warnings'}
+                        </div>
+                      )}
+                    </div>
+
+                    {session.warnings.length > 0 && (
+                      <div className="mb-4 flex-1">
+                        <div className="rounded-lg border border-amber-100 bg-[#fff7ed] p-3">
+                          <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-800">
+                            <AlertTriangle className="h-3 w-3" />
+                            {session.warnings.length === 1 ? 'Important' : 'Important alerts'}
+                          </div>
+                          <p className="line-clamp-2 text-xs text-amber-900">{session.warnings[0]}</p>
+                          {session.warnings.length > 1 && (
+                            <p className="mt-1 text-xs text-amber-700">
+                              +{session.warnings.length - 1} more warning
+                              {session.warnings.length > 2 && 's'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/guided')}
+                      className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-[#e5ded8] py-2.5 text-sm font-medium text-[#5c6664] transition-all hover:border-[#0f7a6a] hover:bg-[#e8f3f0] hover:text-[#0f7a6a]"
+                    >
+                      {session.is_complete ? 'View details' : 'Resume session'}
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => navigate('/guided')}
+                  className="group flex items-center gap-2 rounded-2xl bg-white px-6 py-3 font-medium text-[#5c6664] shadow-sm transition-all hover:border-[#0f7a6a] hover:text-[#0f7a6a]"
+                >
+                  <Plus className="h-5 w-5 text-[#0f7a6a] transition-transform group-hover:scale-110" />
+                  Start a new guided session
+                </button>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

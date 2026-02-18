@@ -6,9 +6,16 @@ interface ChatInputProps {
   setUserInput: (val: string) => void;
   onSend: () => void;
   isLoading: boolean;
+  isEmbedded?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ userInput, setUserInput, onSend, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({
+  userInput,
+  setUserInput,
+  onSend,
+  isLoading,
+  isEmbedded = false,
+}) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -27,22 +34,34 @@ const ChatInput: React.FC<ChatInputProps> = ({ userInput, setUserInput, onSend, 
   };
 
   return (
-    <div className="border-t border-slate-200 bg-white p-4">
-      <div className="relative mx-auto flex max-w-3xl items-end overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm transition-all focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+    <div
+      className={
+        isEmbedded
+          ? 'border-t border-[#e5ded8] bg-white/85 p-4'
+          : 'border-t border-[#e5ded8] bg-white/70 px-4 pb-2 pt-4 backdrop-blur'
+      }
+    >
+      <div
+        className={
+          isEmbedded
+            ? 'relative flex w-full items-end overflow-hidden rounded-2xl border border-[#e5ded8] bg-white shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition-all focus-within:border-[#0f7a6a] focus-within:ring-2 focus-within:ring-[#0f7a6a]/15'
+            : 'relative mx-auto flex max-w-5xl items-end overflow-hidden rounded-3xl border border-[#e5ded8] bg-white/85 shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition-all focus-within:border-[#0f7a6a] focus-within:ring-2 focus-within:ring-[#0f7a6a]/15'
+        }
+      >
         <textarea
           ref={textareaRef}
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask a legal question..."
-          className="max-h-[150px] w-full resize-none border-none bg-transparent py-4 pr-12 pl-5 leading-relaxed text-slate-700 placeholder-slate-400 focus:ring-0"
+          className="max-h-[150px] w-full resize-none border-none bg-transparent py-4 pl-5 pr-12 leading-relaxed text-[#2c3b3a] placeholder-[#9aa2a0] focus:ring-0"
           rows={1}
           disabled={isLoading}
         />
         <button
           onClick={onSend}
           disabled={userInput.trim() === '' || isLoading}
-          className="absolute right-2 bottom-2 rounded-full bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
+          className="absolute bottom-2 right-2 rounded-full bg-[#0f7a6a] p-2 text-white transition-colors hover:bg-[#0b6b5e] disabled:opacity-50 disabled:hover:bg-[#0f7a6a]"
         >
           <Send className="h-5 w-5" />
         </button>
