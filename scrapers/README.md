@@ -48,6 +48,13 @@ cd scrapers
 npm run scrape:migrationsverket
 ```
 
+Convex ingestion (embeddings generated inside Convex action):
+
+```bash
+cd scrapers
+npm run ingest:convex -- --run-dir ./data/migrationsverket/<run-id>
+```
+
 Useful options:
 
 - `--max-pages 200`
@@ -63,6 +70,16 @@ Useful options:
 - `--no-raw-html`
 - `--user-agent "ClarusRAGBot/1.0 (+contact: team@example.com)"`
 
+Ingestion options:
+
+- `--run-dir ./data/migrationsverket/<run-id>`
+- `--chunks-file ./data/migrationsverket/<run-id>/chunks.jsonl`
+- `--convex-url https://<your-deployment>.convex.cloud`
+- `--ingest-token <RAG_INGESTION_SECRET>`
+- `--embedding-model openai/text-embedding-3-small`
+- `--batch-size 12`
+- `--no-finalize`
+
 ## Output
 
 By default, each run writes into a timestamped directory:
@@ -73,6 +90,23 @@ By default, each run writes into a timestamped directory:
 - `chunks.jsonl` - one JSON object per text chunk
 - `manifest.json` - run metadata and counters
 - `raw_html/` - canonical raw HTML snapshots (unless `--no-raw-html`)
+- `ingestion_report.json` - Convex ingestion stats (after `ingest:convex`)
+
+## Convex ingestion env
+
+Set these in your Convex deployment env:
+
+- `OPENROUTER_API_KEY`
+- `RAG_INGESTION_SECRET`
+- optional `OPENROUTER_BASE_URL` (default: `https://openrouter.ai/api/v1`)
+- optional `OPENROUTER_EMBEDDING_MODEL` (default: `openai/text-embedding-3-small`)
+- optional `OPENROUTER_HTTP_REFERER`
+- optional `OPENROUTER_X_TITLE`
+
+Set these for the local ingestion CLI (scrapers process):
+
+- `CONVEX_URL` or pass `--convex-url`
+- `RAG_INGESTION_SECRET` or `CONVEX_RAG_INGESTION_SECRET` or pass `--ingest-token`
 
 ## JSONL schema
 
