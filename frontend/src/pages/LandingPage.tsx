@@ -5,38 +5,69 @@ import {
   SignOutButton,
   SignUpButton,
 } from '@clerk/clerk-react';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const fullIntroText =
+    'Chat, guided workflows, and document analysis tailored to Swedish law - built for HR teams and individuals.';
+  const [typedIntroText, setTypedIntroText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setTypedIntroText(fullIntroText);
+      setIsTypingComplete(true);
+      return;
+    }
+
+    let currentIndex = 0;
+    let intervalId: number | undefined;
+    setTypedIntroText('');
+    setIsTypingComplete(false);
+
+    const timeoutId = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        currentIndex += 1;
+        setTypedIntroText(fullIntroText.slice(0, currentIndex));
+
+        if (currentIndex >= fullIntroText.length) {
+          window.clearInterval(intervalId);
+          setIsTypingComplete(true);
+        }
+      }, 28);
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, [fullIntroText]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <div className="page-intro" />
-      <header className="relative z-10 w-full border-b border-blue-200/50 bg-blue-500/10 shadow-[0_0_35px_rgba(37,99,235,0.45)] backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
-          <div className="text-lg font-semibold text-slate-900">
-            Clarus <span className="text-blue-600">Assistant</span>
-          </div>
-          <div className="flex items-center justify-end">
+    <div className="landing-shell">
+      <div className="landing-orb landing-orb--peach" />
+      <div className="landing-orb landing-orb--mint" />
+      <div className="landing-orb landing-orb--gold" />
+      <header className="landing-nav">
+        <div className="landing-container landing-nav-inner">
+          <div className="landing-brand">Clarus</div>
+          <div className="landing-nav-actions">
             <SignedOut>
-              <div className="flex items-center gap-3">
-                <SignInButton mode="modal">
-                  <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg">
-                    Sign in
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="rounded-full border border-blue-200/40 bg-blue-50/70 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:shadow-lg">
-                    Sign up
-                  </button>
-                </SignUpButton>
-              </div>
+              <SignInButton mode="modal">
+                <button className="landing-button landing-button--primary landing-button--small">
+                  Sign in
+                </button>
+              </SignInButton>
             </SignedOut>
-          <SignedIn>
+            <SignedIn>
               <SignOutButton>
-                <button className="rounded-full border border-blue-200/40 bg-blue-50/70 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:shadow-lg">
+                <button className="landing-button landing-button--ghost landing-button--small">
                   Sign out
                 </button>
               </SignOutButton>
@@ -44,64 +75,102 @@ const LandingPage = () => {
           </div>
         </div>
       </header>
-      <div className="relative z-10 flex min-h-[calc(100vh-76px)] flex-col items-center justify-center p-4">
-        <div className="w-full max-w-4xl space-y-8 text-center">
-        <h1 className="text-5xl font-extrabold tracking-tight text-slate-900">
-          Clarus <span className="text-blue-600">Assistant</span>
-        </h1>
-        <p className="mx-auto max-w-2xl text-xl text-slate-600">
-          Your AI-powered guide to Swedish employment and immigration law. Get instant answers or
-          follow detailed workflows.
-        </p>
-
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <SignedIn>
-            <button
-              onClick={() => navigate('/chat')}
-              className="group relative flex flex-col items-center justify-center rounded-2xl border border-white/60 bg-white/60 p-8 shadow-xl backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl"
-            >
-              <div className="mb-4 rounded-full bg-blue-50 p-4 transition-transform group-hover:scale-110">
-                <MessageSquare className="h-8 w-8 text-blue-600" />
+      <main className="landing-container">
+        <div className="flex flex-col gap-12 pb-16 pt-12 lg:flex-row lg:items-center">
+          <section className="flex-1 space-y-8">
+            <div className="landing-badge">
+              <span className="landing-badge-dot" />
+              AI legal assistant
+            </div>
+            <div className="space-y-4">
+              <h1 className="landing-heading">
+                Clear answers for Swedish employment &amp; immigration.
+              </h1>
+              <p className="landing-subhead">
+                {typedIntroText}
+                {!isTypingComplete && <span className="typewriter-caret" aria-hidden="true" />}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <SignedOut>
+                <SignUpButton mode="modal">
+                  <button className="landing-button landing-button--primary">Start free</button>
+                </SignUpButton>
+                <SignInButton mode="modal">
+                  <button className="landing-button landing-button--ghost">View demo</button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <button
+                  className="landing-button landing-button--primary"
+                  onClick={() => navigate('/chat')}
+                >
+                  Open chat
+                </button>
+                <button
+                  className="landing-button landing-button--ghost"
+                  onClick={() => navigate('/guided')}
+                >
+                  Explore workflows
+                </button>
+              </SignedIn>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="landing-stat">
+                <div className="landing-stat-value">98%</div>
+                <div className="landing-stat-label">case clarity</div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Chat Mode</h3>
-              <p className="mt-2 text-slate-500">Ask questions freely and get cited answers</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/guided')}
-              className="group relative flex flex-col items-center justify-center rounded-2xl border border-white/60 bg-white/60 p-8 shadow-xl backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl"
-            >
-              <div className="mb-4 rounded-full bg-purple-50 p-4 transition-transform group-hover:scale-110">
-                <BookOpen className="h-8 w-8 text-purple-600" />
+              <div className="landing-stat">
+                <div className="landing-stat-value">24/7</div>
+                <div className="landing-stat-label">instant replies</div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Guided Mode</h3>
-              <p className="mt-2 text-slate-500">Follow structured workflows for common tasks</p>
-            </button>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="group relative flex flex-col items-center justify-center rounded-2xl border border-white/60 bg-white/60 p-8 text-left shadow-xl backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl">
-                <div className="mb-4 rounded-full bg-blue-50 p-4 transition-transform group-hover:scale-110">
-                  <MessageSquare className="h-8 w-8 text-blue-600" />
+            </div>
+          </section>
+          <section className="flex-1">
+            <div className="landing-app-card">
+              <div className="landing-app-header">
+                <div>
+                  <div className="landing-app-title">Case summary</div>
+                  <div className="landing-app-subtitle">Employment contract review</div>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Chat Mode</h3>
-                <p className="mt-2 text-slate-500">Sign in to start chatting</p>
-              </button>
-            </SignInButton>
-
-            <SignInButton mode="modal">
-              <button className="group relative flex flex-col items-center justify-center rounded-2xl border border-white/60 bg-white/60 p-8 text-left shadow-xl backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl">
-                <div className="mb-4 rounded-full bg-purple-50 p-4 transition-transform group-hover:scale-110">
-                  <BookOpen className="h-8 w-8 text-purple-600" />
+                <div className="landing-live">
+                  <span className="landing-live-dot" />
+                  Live
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Guided Mode</h3>
-                <p className="mt-2 text-slate-500">Sign in to continue your workflow</p>
-              </button>
-            </SignInButton>
-          </SignedOut>
+              </div>
+              <div className="landing-summary-card">
+                <div className="landing-summary-title">Key findings</div>
+                <ul className="landing-summary-list">
+                  <li>Probation clause not enforceable</li>
+                  <li>Notice period: 1 month</li>
+                  <li>Work permit valid until 2027</li>
+                </ul>
+              </div>
+              <div className="landing-chat">
+                <div className="landing-chat-row landing-chat-row--user">
+                  <div className="landing-chat-bubble landing-chat-bubble--user">
+                    Can I terminate during probation?
+                  </div>
+                </div>
+                <div className="landing-chat-row">
+                  <div className="landing-chat-bubble">
+                    Yes, if the contract allows it and you give notice in writing.
+                  </div>
+                </div>
+              </div>
+              <div className="landing-progress">
+                <div className="landing-progress-ring">
+                  <span>60%</span>
+                </div>
+                <div className="landing-progress-meta">
+                  <div>Guided checklist</div>
+                  <span>3 of 5 steps completed</span>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };
