@@ -133,7 +133,7 @@ const ChatPage = () => {
 
   return (
     <div className="app-shell">
-      <div className="app-content flex h-screen flex-col overflow-hidden">
+      <div className="app-content flex flex-col overflow-hidden">
         <button
           type="button"
           onClick={() => navigate('/')}
@@ -142,7 +142,7 @@ const ChatPage = () => {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <main className={`flex min-h-0 flex-1 flex-col ${isEmpty ? 'pb-72' : 'pb-52 pt-16'}`}>
+        <main className="flex min-h-0 flex-1 flex-col h-auto">
           {isEmpty ? (
             <div className="flex min-h-0 flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">
