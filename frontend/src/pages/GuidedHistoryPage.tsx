@@ -52,9 +52,11 @@ const GuidedHistoryPage = () => {
   };
 
   return (
-    <div className="app-shell">
-      <div className="app-content min-h-screen">
-        <main className="landing-container py-10">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
+      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative z-10 min-h-screen">
+        <main className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
@@ -64,13 +66,13 @@ const GuidedHistoryPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/guided')}
-              className="landing-button landing-button--primary landing-button--small"
-            >
-              <Plus className="h-4 w-4" />
-              New session
+              <button
+                type="button"
+                onClick={() => navigate('/guided')}
+                className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
+              >
+                <Plus className="h-4 w-4" />
+                New session
             </button>
           </div>
           {isLoading ? (
@@ -93,7 +95,7 @@ const GuidedHistoryPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/guided')}
-                className="landing-button landing-button--primary"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
               >
                 <Plus className="h-5 w-5" />
                 Start your first session
@@ -110,7 +112,7 @@ const GuidedHistoryPage = () => {
                 {sessions.map((session) => (
                   <div
                     key={session.id}
-                    className="app-card group flex flex-col p-6 transition-all duration-300 hover:-translate-y-0.5"
+                    className="group flex flex-col rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-6 shadow-[0_14px_30px_rgba(31,41,55,0.1)] transition-all duration-300 hover:-translate-y-0.5"
                   >
                     <div className="mb-4 flex items-start justify-between">
                       <div className="flex-1">

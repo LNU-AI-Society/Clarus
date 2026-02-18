@@ -20,8 +20,8 @@ const GuidedPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const topRow = (
-    <header className="landing-nav">
-      <div className="landing-container landing-nav-inner">
+    <header className="relative z-20">
+      <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-[18px] py-5 sm:px-6">
         <button
           onClick={() => navigate('/')}
           className="inline-flex items-center gap-2 text-sm font-medium text-[#5c6664] transition hover:text-[#1f2937]"
@@ -31,7 +31,7 @@ const GuidedPage = () => {
         </button>
         <button
           onClick={() => window.location.href = '/guided/history'}
-          className="landing-button landing-button--ghost landing-button--small"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
         >
           View history
         </button>
@@ -83,103 +83,105 @@ const GuidedPage = () => {
 
   // 1. Home: Workflow List
   if (!session) {
-      return (
-        <div className="app-shell">
-          <div className="app-content min-h-screen">
-            {topRow}
-            <div className="landing-container py-10">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-[#1f2937]">Guided mode</h1>
-                <p className="text-[#6b7280]">
-                  Select a scenario to get step-by-step guidance.
-                </p>
-              </div>
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
+        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="relative z-10 min-h-screen">
+          {topRow}
+          <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-[#1f2937]">Guided mode</h1>
+              <p className="text-[#6b7280]">Select a scenario to get step-by-step guidance.</p>
+            </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                {workflows.map((wf) => (
-                  <div
-                    key={wf.id}
-                    onClick={() => handleStart(wf.id)}
-                    className="app-card group cursor-pointer p-6 transition-all hover:-translate-y-0.5 hover:border-[#a7b9b4]"
-                  >
-                    <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-[#1f2937] group-hover:text-[#0f7a6a]">
-                      {wf.title}
-                      <ChevronRight className="h-5 w-5 text-[#c0b4ac] group-hover:text-[#0f7a6a]" />
-                    </h3>
-                    <p className="text-sm text-[#5c6664]">{wf.description}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {workflows.map((wf) => (
+                <div
+                  key={wf.id}
+                  onClick={() => handleStart(wf.id)}
+                  className="group cursor-pointer rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-6 shadow-[0_14px_30px_rgba(31,41,55,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#a7b9b4]"
+                >
+                  <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-[#1f2937] group-hover:text-[#0f7a6a]">
+                    {wf.title}
+                    <ChevronRight className="h-5 w-5 text-[#c0b4ac] group-hover:text-[#0f7a6a]" />
+                  </h3>
+                  <p className="text-sm text-[#5c6664]">{wf.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      );
+      </div>
+    );
   }
 
   // 2. Dashboard: Completed Session
   if (session.is_complete) {
-      return (
-        <div className="app-shell">
-          <div className="app-content min-h-screen">
-            {topRow}
-            <div className="landing-container py-10">
-              <div className="app-card p-8">
-                <div className="mb-6 flex items-center gap-3">
-                  <CheckCircle className="h-8 w-8 text-[#2f9e7c]" />
-                  <h1 className="text-2xl font-bold text-[#1f2937]">Analysis complete</h1>
-                </div>
-
-                {session.warnings.length > 0 && (
-                  <div className="mb-8 rounded-2xl border border-amber-100 bg-[#fff7ed] p-4">
-                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-amber-800">
-                      <AlertTriangle className="h-5 w-5" />
-                      Important warnings
-                    </h3>
-                    <ul className="space-y-2">
-                      {session.warnings.map((w, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-amber-900">
-                          <span>•</span> {w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-[#1f2937]">
-                  <Calendar className="h-5 w-5 text-[#0f7a6a]" />
-                  Action plan
-                </h3>
-                <div className="space-y-4">
-                  {session.tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-start gap-4 rounded-2xl border border-[#efe7e0] bg-white p-4 transition-colors"
-                    >
-                      <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-[#cbd5d1]" />
-                      <div>
-                        <h4 className="font-medium text-[#1f2937]">{task.title}</h4>
-                        <p className="mt-1 text-sm text-[#5c6664]">{task.description}</p>
-                        {task.due_date && (
-                          <p className="mt-2 text-xs font-medium text-[#0f7a6a]">
-                            Due: {task.due_date}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setSession(null)}
-                  className="mt-8 text-sm font-semibold text-[#5c6664] hover:text-[#1f2937]"
-                >
-                  ← Start another session
-                </button>
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
+        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="relative z-10 min-h-screen">
+          {topRow}
+          <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+            <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
+              <div className="mb-6 flex items-center gap-3">
+                <CheckCircle className="h-8 w-8 text-[#2f9e7c]" />
+                <h1 className="text-2xl font-bold text-[#1f2937]">Analysis complete</h1>
               </div>
+
+              {session.warnings.length > 0 && (
+                <div className="mb-8 rounded-2xl border border-amber-100 bg-[#fff7ed] p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-amber-800">
+                    <AlertTriangle className="h-5 w-5" />
+                    Important warnings
+                  </h3>
+                  <ul className="space-y-2">
+                    {session.warnings.map((w, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-amber-900">
+                        <span>•</span> {w}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-[#1f2937]">
+                <Calendar className="h-5 w-5 text-[#0f7a6a]" />
+                Action plan
+              </h3>
+              <div className="space-y-4">
+                {session.tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-start gap-4 rounded-2xl border border-[#efe7e0] bg-white p-4 transition-colors"
+                  >
+                    <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-[#cbd5d1]" />
+                    <div>
+                      <h4 className="font-medium text-[#1f2937]">{task.title}</h4>
+                      <p className="mt-1 text-sm text-[#5c6664]">{task.description}</p>
+                      {task.due_date && (
+                        <p className="mt-2 text-xs font-medium text-[#0f7a6a]">
+                          Due: {task.due_date}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setSession(null)}
+                className="mt-8 text-sm font-semibold text-[#5c6664] hover:text-[#1f2937]"
+              >
+                ← Start another session
+              </button>
             </div>
           </div>
         </div>
-      );
+      </div>
+    );
   }
 
   // 3. Wizard: Step View
@@ -188,11 +190,13 @@ const GuidedPage = () => {
   }
 
   return (
-    <div className="app-shell">
-      <div className="app-content min-h-screen">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
+      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative z-10 min-h-screen">
         {topRow}
-        <div className="landing-container py-10">
-          <div className="app-card p-8">
+        <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+          <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
             <div className="mb-8">
               <button
                 onClick={() => setSession(null)}
@@ -203,9 +207,7 @@ const GuidedPage = () => {
               <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-[#f1eee9]">
                 <div className="h-full w-1/3 animate-pulse rounded-full bg-[#0f7a6a]" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold text-[#1f2937]">
-                {currentStep.title}
-              </h2>
+              <h2 className="mb-2 text-2xl font-bold text-[#1f2937]">{currentStep.title}</h2>
               <p className="text-lg text-[#5c6664]">{currentStep.question}</p>
             </div>
 

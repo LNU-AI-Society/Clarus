@@ -132,12 +132,14 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="app-shell">
-      <div className="app-content flex flex-col overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
+      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative z-10 flex h-screen flex-col overflow-hidden">
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="nav-icon-button fixed left-4 top-4 z-30 sm:left-6 sm:top-6"
+          className="fixed left-4 top-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a] sm:left-6 sm:top-6"
           aria-label="Back to home"
         >
           <ArrowLeft className="h-4 w-4" />
