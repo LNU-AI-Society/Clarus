@@ -1,48 +1,16 @@
 import { action } from './_generated/server';
-import { searchRagChunks } from './ragSearch';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { v } from 'convex/values';
+import { buildChatMessages, createRagSearchTool, SYSTEM_PROMPT } from './chatRag';
 
 const DEFAULT_MODEL = 'gemini-3-flash-preview';
 const DEFAULT_RAG_LIMIT = 6;
-const SYSTEM_PROMPT =
-  'You are Clarus, a helpful Swedish legal assistant. Be clear, concise, and avoid legal advice.';
 const env =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 const getApiKey = () => env.GEMINI_API_KEY?.trim();
 const resolveModel = () => env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
 const isRagEnabled = () => (env.RAG_ENABLED?.trim().toLowerCase() ?? 'true') !== 'false';
-
-const normalizeRole = (role: string) =>
-  role === 'assistant' || role === 'model' ? 'Assistant' : 'User';
-
-const buildPrompt = (
-  message: string,
-  history?: Array<{ role: string; content: string }>,
-  ragContext?: string,
-) => {
-  const lines = [SYSTEM_PROMPT];
-
-  if (ragContext) {
-    lines.push(
-      [
-        'Use the following retrieval context if it is relevant to the user question.',
-        'If the context is insufficient, clearly say what is uncertain.',
-        '',
-        ragContext,
-      ].join('\n'),
-    );
-  }
-
-  for (const item of history ?? []) {
-    lines.push(`${normalizeRole(item.role)}: ${item.content}`);
-  }
-
-  lines.push(`User: ${message}`);
-
-  return lines.join('\n\n');
-};
 
 export const sendMessage = action({
   args: {
@@ -69,7 +37,16 @@ export const sendMessage = action({
       };
     }
 
-    let ragContext = '';
+    const google = createGoogleGenerativeAI({ apiKey });
+    const messages = buildChatMessages(args.message, args.history);
+    const tools = isRagEnabled()
+      ? {
+          rag_search_sv: createRagSearchTool(ctx, {
+            siteId: args.rag_site_id,
+            limit: args.rag_limit ?? DEFAULT_RAG_LIMIT,
+          }),
+        }
+      : undefined;
     let citations: Array<{
       id: string;
       title: string;
@@ -78,27 +55,22 @@ export const sendMessage = action({
       source_type: string;
     }> = [];
 
-    if (isRagEnabled()) {
-      try {
-        const ragResult = await searchRagChunks(ctx, {
-          query: args.message,
-          site_id: args.rag_site_id,
-          lang: args.rag_lang,
-          limit: args.rag_limit ?? DEFAULT_RAG_LIMIT,
-        });
-
-        ragContext = ragResult.context;
-        citations = ragResult.citations;
-      } catch (error) {
-        console.error('RAG search failed for chat request', error);
-      }
-    }
-
-    const google = createGoogleGenerativeAI({ apiKey });
-    const prompt = buildPrompt(args.message, args.history, ragContext);
     const result = await generateText({
       model: google(resolveModel()),
-      prompt,
+      system: SYSTEM_PROMPT,
+      messages,
+      tools,
+      maxSteps: isRagEnabled() ? 4 : 1,
+      onStepFinish: ({ toolResults }) => {
+        for (const toolResult of toolResults ?? []) {
+          if (toolResult.toolName === 'rag_search_sv') {
+            const ragResult = toolResult.result as {
+              citations?: typeof citations;
+            };
+            citations = ragResult?.citations ?? [];
+          }
+        }
+      },
     });
     const answer = result.text?.trim() || 'No response generated.';
 
