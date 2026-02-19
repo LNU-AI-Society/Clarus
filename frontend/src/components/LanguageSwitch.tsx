@@ -1,4 +1,4 @@
-import { useTolgee, useTranslate } from '@tolgee/react';
+import { T, useTolgee } from '@tolgee/react';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -15,7 +15,6 @@ type LanguageSwitchProps = {
 
 const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
   const tolgee = useTolgee(['language']);
-  const { t } = useTranslate();
   const currentLanguage = tolgee.getLanguage() ?? 'en';
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -61,17 +60,14 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`relative inline-flex items-center ${className ?? ''}`}
-      aria-label={t('languageSwitch.label')}
-    >
+    <div ref={containerRef} className={`relative inline-flex items-center ${className ?? ''}`}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="inline-flex items-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-3 py-2 text-xs font-semibold text-[#0f7a6a] shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition-all hover:-translate-y-[1px] hover:shadow-[0_14px_30px_rgba(31,41,55,0.12)]"
+        aria-label="Language switch"
+        className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:shadow-soft-hover inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-all hover:-translate-y-px"
       >
         <span className="text-base leading-none" aria-hidden="true">
           {current.flag}
@@ -82,7 +78,7 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
       <div
         role="menu"
         aria-hidden={!isOpen}
-        className={`absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border border-[rgba(229,222,216,0.8)] bg-white/95 p-2 text-sm text-[#1f2937] shadow-[0_18px_40px_rgba(31,41,55,0.16)] backdrop-blur-sm transition-all duration-150 ${
+        className={`border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 ${
           isOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
         }`}
       >
@@ -99,20 +95,17 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
                 setIsOpen(false);
               }}
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors ${
-                isActive
-                  ? 'bg-[#e8f3f0] text-[#0f7a6a]'
-                  : 'text-[#5c6664] hover:bg-[#f5f1ec]'
+                isActive ? 'bg-brand-soft text-brand' : 'text-muted hover:bg-surface-muted'
               }`}
             >
               <span className="text-base leading-none" aria-hidden="true">
                 {language.flag}
               </span>
-              <span className="flex-1 font-medium">{t(language.labelKey)}</span>
+              <span className="flex-1 font-medium">
+                <T keyName={language.labelKey} />
+              </span>
               {isActive && (
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-[#0f7a6a]"
-                  aria-hidden="true"
-                />
+                <span className="bg-brand h-1.5 w-1.5 rounded-full" aria-hidden="true" />
               )}
             </button>
           );

@@ -1,13 +1,9 @@
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-} from '@clerk/clerk-react';
-import Navbar from '../components/Navbar';
-import { useTranslate } from '@tolgee/react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import LanguageSwitch from '../components/LanguageSwitch';
+import { SignedIn, SignedOut, SignInButton, SignOutButton, SignUpButton } from '@clerk/clerk-react';
+import { useNavigate } from '@tanstack/react-router';
+import { T, useTranslate } from '@tolgee/react';
+import { User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -15,6 +11,8 @@ const LandingPage = () => {
   const fullIntroText = t('landing.hero.intro');
   const [typedIntroText, setTypedIntroText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,31 +48,101 @@ const LandingPage = () => {
     };
   }, [fullIntroText]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!profileRef.current) return;
+      if (!profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
-    <div className="relative min-h-screen text-[#1f2937]">
-      <div className="fixed inset-0 z-0 bg-[#f7f2ed]">
-        <div className="pointer-events-none absolute -left-[140px] -top-[180px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] blur-[0.4px]" />
-        <div className="pointer-events-none absolute -bottom-[200px] -right-[180px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.85),_transparent_70%)] blur-[0.4px]" />
-        <div className="pointer-events-none absolute right-[120px] top-[-100px] h-[260px] w-[260px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,241,204,0.85),_transparent_70%)] blur-[0.4px]" />
-      </div>
-      <div className="relative z-10 min-h-screen">
-        <Navbar />
-        <main className="mx-auto w-full max-w-[1120px] px-[18px] sm:px-6">
-        <div className="flex flex-col gap-12 pb-16 pt-12 lg:flex-row lg:items-center">
+    <div className="bg-app-bg text-ink relative min-h-screen overflow-hidden">
+      <div className="from-halo-peach/90 pointer-events-none absolute -top-44 -left-36 h-96 w-96 rounded-full bg-radial to-transparent" />
+      <div className="from-halo-mint/85 pointer-events-none absolute -right-44 -bottom-52 h-96 w-96 rounded-full bg-radial to-transparent" />
+      <div className="from-halo-gold/85 pointer-events-none absolute -top-24 right-24 h-64 w-64 rounded-full bg-radial to-transparent" />
+      <header className="relative z-20">
+        <div className="max-w-layout mx-auto flex w-full items-center justify-between gap-6 px-4 py-5 sm:px-6">
+          <div className="font-display text-ink text-xl font-bold">Clarus</div>
+          <div className="flex items-center gap-3">
+            <LanguageSwitch />
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button
+                  type="button"
+                  className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
+                >
+                  <T keyName="landing.auth.signIn" />
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <div ref={profileRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileOpen((prev) => !prev)}
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileOpen}
+                  aria-label="Profile menu"
+                  className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:bg-surface-muted hover:shadow-soft-hover inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px"
+                >
+                  <User className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div
+                  role="menu"
+                  aria-hidden={!isProfileOpen}
+                  className={`border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 ${
+                    isProfileOpen
+                      ? 'translate-y-0 opacity-100'
+                      : 'pointer-events-none translate-y-1 opacity-0'
+                  }`}
+                >
+                  <SignOutButton>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="text-muted hover:bg-surface-muted flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium transition-colors"
+                    >
+                      <T keyName="landing.auth.signOut" />
+                    </button>
+                  </SignOutButton>
+                </div>
+              </div>
+            </SignedIn>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-layout mx-auto w-full px-4 sm:px-6">
+        <div className="flex flex-col gap-12 pt-12 pb-16 lg:flex-row lg:items-center">
           <section className="flex-1 space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#e8f3f0] px-3.5 py-1.5 text-xs font-semibold text-[#0f7a6a]">
-              <span className="h-2 w-2 rounded-full bg-[#0f7a6a]" />
-              {t('landing.badge')}
+            <div className="bg-brand-soft text-brand inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold">
+              <span className="bg-brand h-2 w-2 rounded-full" />
+              <T keyName="landing.badge" />
             </div>
             <div className="space-y-4">
-              <h1 className="font-['Sora'] text-[clamp(2.2rem,3.2vw,3.4rem)] leading-[1.1] text-[#1f2937]">
-                {t('landing.hero.title')}
+              <h1 className="font-display text-ink text-4xl leading-tight sm:text-5xl">
+                <T keyName="landing.hero.title" />
               </h1>
-              <p className="max-w-[32rem] text-base leading-[1.6] text-[#4b5563]">
+              <p className="text-subtle max-w-lg text-base leading-relaxed">
                 {typedIntroText}
                 {!isTypingComplete && (
                   <span
-                    className="ml-1.5 inline-block h-[1.1em] w-[2px] animate-[typewriterBlink_0.9s_step-end_infinite] align-text-bottom bg-current motion-reduce:animate-none"
+                    className="animate-typewriter-blink ml-1.5 inline-block h-4 w-px bg-current align-text-bottom motion-reduce:animate-none"
                     aria-hidden="true"
                   />
                 )}
@@ -83,89 +151,109 @@ const LandingPage = () => {
             <div className="flex flex-col gap-3 sm:flex-row">
               <SignedOut>
                 <SignUpButton mode="modal">
-                  <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]">
-                    {t('landing.cta.startFree')}
+                  <button
+                    type="button"
+                    className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-px"
+                  >
+                    <T keyName="landing.cta.startFree" />
                   </button>
                 </SignUpButton>
                 <SignInButton mode="modal">
-                  <button className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-[22px] py-3 font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
-                    {t('landing.cta.viewDemo')}
+                  <button
+                    type="button"
+                    className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:shadow-card inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 font-semibold transition-all duration-200"
+                  >
+                    <T keyName="landing.cta.viewDemo" />
                   </button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
                 <button
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
-                  onClick={() => navigate('/chat')}
+                  type="button"
+                  className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-px"
+                  onClick={() => navigate({ to: '/chat' })}
                 >
-                  {t('landing.cta.openChat')}
+                  <T keyName="landing.cta.openChat" />
                 </button>
                 <button
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-[22px] py-3 font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
-                  onClick={() => navigate('/guided')}
+                  type="button"
+                  className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:shadow-card inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 font-semibold transition-all duration-200"
+                  onClick={() => navigate({ to: '/guided' })}
                 >
-                  {t('landing.cta.exploreWorkflows')}
+                  <T keyName="landing.cta.exploreWorkflows" />
                 </button>
               </SignedIn>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[rgba(229,222,216,0.7)] bg-white/90 px-4 py-3.5 shadow-[0_12px_24px_rgba(31,41,55,0.08)]">
-                <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">98%</div>
-                <div className="text-xs text-[#6b7280]">{t('landing.stats.caseClarityLabel')}</div>
+              <div className="border-border/70 bg-surface/90 shadow-soft rounded-2xl border px-4 py-3.5">
+                <div className="font-display text-ink text-lg font-bold">98%</div>
+                <div className="text-subtle text-xs">
+                  <T keyName="landing.stats.caseClarityLabel" />
+                </div>
               </div>
-              <div className="rounded-2xl border border-[rgba(229,222,216,0.7)] bg-white/90 px-4 py-3.5 shadow-[0_12px_24px_rgba(31,41,55,0.08)]">
-                <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">24/7</div>
-                <div className="text-xs text-[#6b7280]">{t('landing.stats.instantRepliesLabel')}</div>
+              <div className="border-border/70 bg-surface/90 shadow-soft rounded-2xl border px-4 py-3.5">
+                <div className="font-display text-ink text-lg font-bold">24/7</div>
+                <div className="text-subtle text-xs">
+                  <T keyName="landing.stats.instantRepliesLabel" />
+                </div>
               </div>
             </div>
           </section>
           <section className="flex-1">
-            <div className="rounded-[28px] border border-[rgba(229,222,216,0.6)] bg-white p-5 shadow-[0_18px_40px_rgba(31,41,55,0.12)] sm:p-6">
+            <div className="rounded-panel border-border/60 bg-surface shadow-panel border p-5 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">
-                    {t('landing.caseSummary.title')}
+                  <div className="font-display text-ink text-lg font-bold">
+                    <T keyName="landing.caseSummary.title" />
                   </div>
-                  <div className="text-[12px] text-[#7c8784]">
-                    {t('landing.caseSummary.subtitle')}
+                  <div className="text-note text-xs">
+                    <T keyName="landing.caseSummary.subtitle" />
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f7f4] px-2.5 py-1 text-[11px] font-semibold text-[#2f9e7c]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#2f9e7c]" />
-                  {t('landing.caseSummary.live')}
+                <div className="bg-brand-soft-alt text-positive inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+                  <span className="bg-positive h-1.5 w-1.5 rounded-full" />
+                  <T keyName="landing.caseSummary.live" />
                 </div>
               </div>
-              <div className="mb-4 rounded-2xl bg-[#f8f3ee] p-4 sm:rounded-[18px]">
-                <div className="mb-2 text-[12px] font-bold text-[#8b6b5f]">
-                  {t('landing.caseSummary.keyFindings')}
+              <div className="bg-surface-panel sm:rounded-soft mb-4 rounded-2xl p-4">
+                <div className="text-note-warm mb-2 text-xs font-bold">
+                  <T keyName="landing.caseSummary.keyFindings" />
                 </div>
-                <ul className="list-disc pl-[18px] text-[13px] leading-[1.5] text-[#4b3d36]">
-                  <li>{t('landing.caseSummary.finding1')}</li>
-                  <li>{t('landing.caseSummary.finding2')}</li>
-                  <li>{t('landing.caseSummary.finding3')}</li>
+                <ul className="text-note-dark list-disc pl-5 text-sm leading-snug">
+                  <li>
+                    <T keyName="landing.caseSummary.finding1" />
+                  </li>
+                  <li>
+                    <T keyName="landing.caseSummary.finding2" />
+                  </li>
+                  <li>
+                    <T keyName="landing.caseSummary.finding3" />
+                  </li>
                 </ul>
               </div>
               <div className="mb-4 grid gap-2.5">
                 <div className="flex justify-end">
-                  <div className="max-w-[260px] rounded-2xl bg-[#0f7a6a] px-3.5 py-2.5 text-[13px] leading-[1.4] text-white">
-                    {t('landing.caseSummary.question')}
+                  <div className="bg-brand max-w-64 rounded-2xl px-3.5 py-2.5 text-sm leading-snug text-white">
+                    <T keyName="landing.caseSummary.question" />
                   </div>
                 </div>
                 <div className="flex">
-                  <div className="max-w-[260px] rounded-2xl bg-[#f1f5f4] px-3.5 py-2.5 text-[13px] leading-[1.4] text-[#2c3b3a]">
-                    {t('landing.caseSummary.answer')}
+                  <div className="bg-surface-mint text-chat max-w-64 rounded-2xl px-3.5 py-2.5 text-sm leading-snug">
+                    <T keyName="landing.caseSummary.answer" />
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl bg-[#f9fafb] p-3 sm:rounded-[18px]">
-                <div className="relative grid h-14 w-14 place-items-center rounded-full bg-[conic-gradient(#0f7a6a_60%,_#e4efec_0)] text-[11px] font-bold text-[#0f7a6a]">
-                  <span className="absolute inset-[6px] rounded-full bg-[#f9fafb]" />
+              <div className="bg-surface-card sm:rounded-soft flex items-center gap-3 rounded-2xl p-3">
+                <div className="border-halo-track border-r-brand border-t-brand text-brand relative grid h-14 w-14 place-items-center rounded-full border-4 text-xs font-bold">
+                  <span className="bg-surface-card absolute inset-1 rounded-full" />
                   <span className="relative z-10">60%</span>
                 </div>
-                <div className="flex flex-col gap-0.5 text-[12px] font-bold text-[#1f2937]">
-                  <div>{t('landing.caseSummary.guidedChecklistTitle')}</div>
-                  <span className="font-medium text-[#6b7280]">
-                    {t('landing.caseSummary.guidedChecklistSubtitle')}
+                <div className="text-ink flex flex-col gap-0.5 text-xs font-bold">
+                  <div>
+                    <T keyName="landing.caseSummary.guidedChecklistTitle" />
+                  </div>
+                  <span className="text-subtle font-medium">
+                    <T keyName="landing.caseSummary.guidedChecklistSubtitle" />
                   </span>
                 </div>
               </div>
@@ -174,7 +262,6 @@ const LandingPage = () => {
         </div>
       </main>
     </div>
-  </div>
   );
 };
 

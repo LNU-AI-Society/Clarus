@@ -1,3 +1,4 @@
+import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { getStep, getWorkflow, WORKFLOWS } from './workflows';
 import { v } from 'convex/values';
@@ -49,15 +50,7 @@ const buildTasksAndWarnings = (workflowId: string, answers: Record<string, strin
   return { tasks, warnings };
 };
 
-const mapSession = (session: {
-  _id: string;
-  workflow_id: string;
-  current_step_id?: string;
-  answers: Record<string, string>;
-  is_complete: boolean;
-  tasks: Array<{ id: string; title: string; description: string; due_date?: string }>;
-  warnings: string[];
-}) => ({
+const mapSession = (session: Doc<'guidedSessions'>) => ({
   id: session._id,
   workflow_id: session.workflow_id,
   current_step_id: session.current_step_id,
@@ -67,18 +60,35 @@ const mapSession = (session: {
   warnings: session.warnings,
 });
 
+type AuthContext = {
+  auth: {
+    getUserIdentity: () => Promise<{ subject: string } | null>;
+  };
+};
+
+const requireUserId = async (ctx: AuthContext) => {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized');
+  }
+  return identity.subject;
+};
+
 export const listWorkflows = query({
-  handler: async () =>
-    WORKFLOWS.map((workflow) => ({
+  handler: async (ctx) => {
+    await requireUserId(ctx);
+    return WORKFLOWS.map((workflow) => ({
       id: workflow.id,
       title: workflow.title,
       description: workflow.description,
-    })),
+    }));
+  },
 });
 
 export const getWorkflowStep = query({
   args: { workflowId: v.string(), stepId: v.string() },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireUserId(ctx);
     const step = getStep(args.workflowId, args.stepId);
     if (!step) {
       throw new Error('Step not found');
@@ -90,6 +100,7 @@ export const getWorkflowStep = query({
 export const startSession = mutation({
   args: { workflowId: v.string() },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const workflow = getWorkflow(args.workflowId);
     if (!workflow || workflow.steps.length === 0) {
       throw new Error('Workflow not found');
@@ -97,6 +108,7 @@ export const startSession = mutation({
 
     const now = Date.now();
     const sessionId = await ctx.db.insert('guidedSessions', {
+      user_id: userId,
       workflow_id: workflow.id,
       current_step_id: workflow.steps[0].id,
       answers: {},
@@ -118,8 +130,12 @@ export const startSession = mutation({
 export const submitAnswer = mutation({
   args: { sessionId: v.id('guidedSessions'), answer: v.string() },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
+      throw new Error('Session not found');
+    }
+    if (session.user_id !== userId) {
       throw new Error('Session not found');
     }
 
@@ -163,8 +179,12 @@ export const submitAnswer = mutation({
 export const getSession = query({
   args: { sessionId: v.id('guidedSessions') },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
+      throw new Error('Session not found');
+    }
+    if (session.user_id !== userId) {
       throw new Error('Session not found');
     }
     return mapSession(session);
@@ -173,9 +193,12 @@ export const getSession = query({
 
 export const getHistory = query({
   handler: async (ctx) => {
-    const sessions = await ctx.db.query('guidedSessions').collect();
-    return sessions
-      .sort((a, b) => b.created_at - a.created_at)
-      .map((session) => mapSession(session));
+    const userId = await requireUserId(ctx);
+    const sessions = await ctx.db
+      .query('guidedSessions')
+      .withIndex('by_user_created', (q) => q.eq('user_id', userId))
+      .order('desc')
+      .collect();
+    return sessions.map((session) => mapSession(session));
   },
 });
