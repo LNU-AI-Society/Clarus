@@ -6,7 +6,6 @@ import { analyzeDocument, sendMessage } from '../services/api';
 import { Message } from '../types';
 import { useTranslate } from '@tolgee/react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
-import { useState } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
