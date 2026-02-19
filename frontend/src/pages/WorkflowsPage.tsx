@@ -1,9 +1,9 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
 import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
 import { ArrowLeft, ArrowRight, CheckCircle, Clock, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const WorkflowsPage = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const WorkflowsPage = () => {
             <LanguageSwitch />
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate({ to: '/dashboard' })}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -55,7 +55,7 @@ const WorkflowsPage = () => {
             </p>
             <button
               type="button"
-              onClick={() => navigate('/guided')}
+              onClick={() => navigate({ to: '/guided' })}
               className="mt-6 rounded-xl bg-indigo-600 px-6 py-2.5 font-medium text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-lg"
             >
               <T keyName="workflows.empty.cta" />
@@ -104,7 +104,7 @@ const WorkflowsPage = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate('/guided')}
+                  onClick={() => navigate({ to: '/guided' })}
                   className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-700"
                 >
                   <T keyName="workflows.open" />

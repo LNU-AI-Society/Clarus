@@ -1,4 +1,5 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { useNavigate } from '@tanstack/react-router';
 import { T, useTranslate } from '@tolgee/react';
 import { api } from '../../convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
@@ -12,7 +13,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const workflowCopy: Record<string, { titleKey: string; descriptionKey: string }> = {
   renewal: {
@@ -166,7 +166,7 @@ const GuidedPage = () => {
       <div className="mx-auto flex w-full max-w-layout items-center justify-between gap-6 px-4 py-5 sm:px-6">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate({ to: '/' })}
           className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -176,7 +176,7 @@ const GuidedPage = () => {
           <LanguageSwitch />
           <button
             type="button"
-            onClick={() => navigate('/guided/history')}
+            onClick={() => navigate({ to: '/guided/history' })}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
           >
             <T keyName="guided.top.viewHistory" />

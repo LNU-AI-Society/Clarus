@@ -1,9 +1,9 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
 import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
 import { FileText, CheckCircle, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const DashboardPage = () => {
               <LanguageSwitch />
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate({ to: '/' })}
                 className="text-muted hover:text-ink text-sm font-medium"
               >
                 <T keyName="dashboard.backToHome" />
@@ -49,7 +49,7 @@ const DashboardPage = () => {
                 </h2>
                 <button
                   type="button"
-                  onClick={() => navigate('/guided/history')}
+                  onClick={() => navigate({ to: '/guided/history' })}
                   className="text-brand hover:text-brand-hover text-sm font-semibold"
                 >
                   <T keyName="dashboard.workflows.viewAll" />
@@ -68,7 +68,7 @@ const DashboardPage = () => {
                     </p>
                     <button
                       type="button"
-                      onClick={() => navigate('/guided')}
+                      onClick={() => navigate({ to: '/guided' })}
                       className="text-brand hover:text-brand-hover text-sm font-semibold"
                     >
                       <T keyName="dashboard.workflows.startNew" />
@@ -119,7 +119,7 @@ const DashboardPage = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => navigate('/chat')}
+                  onClick={() => navigate({ to: '/chat' })}
                   className="text-brand hover:text-brand-hover text-sm font-semibold"
                 >
                   <T keyName="dashboard.recent.start" />

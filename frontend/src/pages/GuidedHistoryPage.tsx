@@ -1,4 +1,5 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
 import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
@@ -12,7 +13,6 @@ import {
   FileText,
   Plus,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const workflowTitleKeys: Record<string, string> = {
   renewal: 'guidedHistory.workflow.renewal.title',
@@ -45,7 +45,7 @@ const GuidedHistoryPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => navigate('/guided')}
+              onClick={() => navigate({ to: '/guided' })}
               className="text-muted hover:text-ink inline-flex items-center gap-2 text-sm font-medium transition"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -55,7 +55,7 @@ const GuidedHistoryPage = () => {
               <LanguageSwitch />
               <button
                 type="button"
-                onClick={() => navigate('/guided')}
+                onClick={() => navigate({ to: '/guided' })}
                 className="bg-brand shadow-brand hover:bg-brand-hover mt-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
               >
                 <Plus className="h-4 w-4" />
@@ -85,7 +85,7 @@ const GuidedHistoryPage = () => {
               </p>
               <button
                 type="button"
-                onClick={() => navigate('/guided')}
+                onClick={() => navigate({ to: '/guided' })}
                 className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-px"
               >
                 <Plus className="h-5 w-5" />
@@ -208,7 +208,7 @@ const GuidedHistoryPage = () => {
 
                       <button
                         type="button"
-                        onClick={() => navigate('/guided')}
+                        onClick={() => navigate({ to: '/guided' })}
                         className="border-border text-muted hover:border-brand hover:bg-brand-soft hover:text-brand mt-auto flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-all"
                       >
                         {session.is_complete ? (
@@ -226,7 +226,7 @@ const GuidedHistoryPage = () => {
               <div className="mt-8 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => navigate('/guided')}
+                  onClick={() => navigate({ to: '/guided' })}
                   className="group bg-surface text-muted hover:border-brand hover:text-brand flex items-center gap-2 rounded-2xl border border-transparent px-6 py-3 font-medium shadow-sm transition-all"
                 >
                   <Plus className="text-brand h-5 w-5 transition-transform group-hover:scale-110" />

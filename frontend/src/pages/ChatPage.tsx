@@ -4,11 +4,11 @@ import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
 import { Message } from '../components/chat/types';
 import { T, useTranslate } from '@tolgee/react';
+import { useNavigate } from '@tanstack/react-router';
 import { api } from '../../convex/_generated/api';
 import { useAction } from 'convex/react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const ChatPage = () => {
   const navigate = useNavigate();
@@ -147,7 +147,7 @@ const ChatPage = () => {
       <div className="relative z-10 flex min-h-screen flex-col">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate({ to: '/' })}
           className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand fixed top-4 left-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px sm:top-6 sm:left-6"
           aria-label="Back to home"
         >
