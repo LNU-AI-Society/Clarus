@@ -1,60 +1,90 @@
-# Clarus - AI Legal Assistant for Sweden
+# Clarus
 
-## Vision & Mission
+Clarus is an AI powered legal assistant for Swedish employment and immigration topics. It provides a chat experience, guided workflows, and a document analysis placeholder to help users understand common scenarios and next steps.
+
+## Vision and Mission
 
 Navigating Swedish employment and immigration law can be overwhelming. Legal information is often scattered, dense, and difficult to interpret without expertise.
 
-**Clarus** aims to democratize access to legal information by making Swedish employment and immigration guidance accessible, understandable, and actionable. We believe everyone deserves clear, reliable information about their rights and obligations.
+Clarus aims to democratize access to legal information by making Swedish employment and immigration guidance accessible, understandable, and actionable.
 
 ## About the Project
 
-Clarus is an AI-powered legal assistant. It helps users understand their rights, navigate complex legal processes, and take informed action on matters related to work permits, employment changes, and permanent residence.
+Clarus helps users understand their options, navigate common legal processes, and prepare for next steps related to work permits and employment changes.
 
-### Core Features
+## Core Features
 
-* **Chat Mode:** Interactive Q&A with an AI assistant that understands your specific legal situation.
-* **Guided Mode:** Structured workflows for common scenarios (e.g., Work Permit Renewal).
-* **Document Analysis:** Upload contracts or forms for summary and risk assessment.
-* **Citation-Backed Answers:** All AI responses include inline citations to ensure transparency.
+- Chat mode with streaming responses
+- Guided workflows for common scenarios
+- Session history for guided workflows
+- Document analysis placeholder that returns a summary and suggested questions
+- Clerk based sign in and sign out
 
 ## Tech Stack
 
-* **Frontend:** TypeScript (React + Vite + TailwindCSS)
-* **Backend:** Python (FastAPI)
-* **AI/LLM:** Google Gemini Pro (via Vertex AI or Gemini API)
-* **Containerization:** Docker
+- Frontend: TypeScript, React, Vite, Tailwind CSS
+- Backend: Convex functions and database
+- AI and LLM: Google Gemini via the AI SDK in Convex actions
+- Authentication: Clerk
 
-## Getting Started
+## Architecture Summary
 
-### Prerequisites
+- UI calls Convex queries, mutations, and actions through `frontend/src/services/api.ts`
+- Streaming chat uses the Convex HTTP route `/chat/stream`
+- Guided workflows are defined in `frontend/convex/workflows.ts`
+- Guided sessions are stored in the `guidedSessions` table
+- Document analysis is a stub in `frontend/convex/documents.ts`
 
-* **Node.js** (v18+)
-* **Python** (v3.11+)
-* **Gemini API Key** or Google Cloud credentials
+## Environment Variables
 
-### Installation
+Frontend:
+- `VITE_CLERK_PUBLISHABLE_KEY` Clerk publishable key
+- `VITE_CONVEX_URL` Convex deployment URL, default `http://localhost:3210`
+- `VITE_CONVEX_SITE_URL` Optional Convex site URL used for streaming endpoint
 
-1.  **Clone the repository**
-    ```bash
-    git clone [https://github.com/youni20/Clarus.git](https://github.com/youni20/Clarus.git)
-    cd Clarus
-    ```
+Convex backend:
+- `GEMINI_API_KEY` Required for chat responses
+- `GEMINI_MODEL` Optional, default `gemini-3-flash-preview`
+- `CLIENT_ORIGIN` Optional CORS origin for streaming endpoint, default `http://localhost:5173`
 
-2.  **Install dependencies**
-    * Frontend: `cd frontend && npm install`
-    * Backend: `cd backend && pip install -r requirements.txt`
+## Local Development
 
-3.  **Environment Setup**
-    Create a `.env` file in the backend directory with your `GEMINI_API_KEY`.
+From the repository root:
 
-4.  **Run Development Servers**
-    * Frontend: `cd frontend && npm run dev`
-    * Backend: `cd backend && uvicorn app.main:app --reload`
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Contributing
+In another terminal:
 
-Please see our [internal Notion page](https://www.notion.so/LNUAIS-PROJECT-1-2d0181ce5ebd804b94d0c5b1ed127060?source=copy_link&assetsVersion=23.13.20260119.1201&cookie_sync_completed=true) for the "Clarus Engineering" contribution guide, branching rules, and coding standards.
+```bash
+cd frontend
+npm run dev:convex
+```
 
----
+## Build and Preview
 
-**Disclaimer:** This application provides informational guidance only and does not constitute legal advice. Users should consult with qualified legal professionals for their specific legal situations.
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+## Project Structure
+
+- `frontend/` React app and Convex backend
+  - `src/` UI pages and components
+  - `convex/` Convex actions, queries, mutations, and schema
+- `docs/` Internal notes and sandbox review
+- `docker-compose.yml` Legacy reference to a backend directory not included here
+
+## Limitations
+
+- Document analysis is a placeholder and does not parse files yet
+- Chat citations are not implemented
+
+## Disclaimer
+
+Clarus provides informational guidance only and does not constitute legal advice. Users should consult qualified legal professionals for their specific situations.

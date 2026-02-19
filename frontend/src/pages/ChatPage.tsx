@@ -6,7 +6,7 @@ import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useTranslate } from '@tolgee/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ChatPage = () => {
@@ -15,6 +15,8 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const footerRef = useRef<HTMLDivElement | null>(null);
   const isEmpty = messages.length === 0;
   const suggestedQuestions = [
     t('chat.suggested.q1'),
@@ -133,11 +135,36 @@ const ChatPage = () => {
     }
   };
 
+  useEffect(() => {
+    const element = footerRef.current;
+    if (!element) return;
+
+    const updateHeight = () => {
+      setFooterHeight(element.offsetHeight);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => updateHeight());
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const footerPadding = footerHeight
+    ? `calc(${footerHeight}px + env(safe-area-inset-bottom))`
+    : 'calc(240px + env(safe-area-inset-bottom))';
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      <div className="relative z-10 flex h-screen flex-col overflow-hidden">
+    <div className="relative min-h-screen text-[#1f2937]">
+      <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
+        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      </div>
+      <div className="relative z-10 flex min-h-screen flex-col">
         <button
           type="button"
           onClick={() => navigate('/')}
@@ -149,9 +176,9 @@ const ChatPage = () => {
         <div className="fixed right-4 top-4 z-30 sm:right-6 sm:top-6">
           <LanguageSwitch />
         </div>
-        <main className={`flex min-h-0 flex-1 flex-col ${isEmpty ? 'pb-72' : 'pb-52 pt-16'}`}>
+        <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
           {isEmpty ? (
-            <div className="flex min-h-0 flex-1 flex-col justify-end gap-6">
+            <div className="flex flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">
                 <ChatWindow
                   messages={messages}
@@ -160,38 +187,34 @@ const ChatPage = () => {
                   isEmpty={isEmpty}
                 />
               </div>
+              <div className="mx-auto w-full max-w-5xl px-4 pb-6">
+                <div className="mb-3 flex items-center gap-2 text-[#54605e]">
+                  <Lightbulb className="h-5 w-5 text-[#0f7a6a]" />
+                  <h3 className="text-sm font-semibold">{t('chat.suggested.title')}</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {suggestedQuestions.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSend(q)}
+                      className="rounded-2xl border border-[#e5ded8] bg-white/90 p-4 text-left text-sm text-[#334155] shadow-sm transition-all hover:border-[#0f7a6a] hover:text-[#0f7a6a] hover:shadow-md"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
-            <>
-              <ChatWindow
-                messages={messages}
-                isLoading={isLoading}
-                onQuestionClick={(q) => handleSend(q)}
-                isEmpty={isEmpty}
-              />
-            </>
+            <ChatWindow
+              messages={messages}
+              isLoading={isLoading}
+              onQuestionClick={(q) => handleSend(q)}
+              isEmpty={isEmpty}
+            />
           )}
         </main>
-        <div className="fixed bottom-0 left-0 right-0 z-20">
-          {isEmpty && (
-            <div className="mx-auto w-full max-w-5xl px-4 pb-3">
-              <div className="mb-3 flex items-center gap-2 text-[#54605e]">
-                <Lightbulb className="h-5 w-5 text-[#0f7a6a]" />
-                <h3 className="text-sm font-semibold">{t('chat.suggested.title')}</h3>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {suggestedQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSend(q)}
-                    className="rounded-2xl border border-[#e5ded8] bg-white/90 p-4 text-left text-sm text-[#334155] shadow-sm transition-all hover:border-[#0f7a6a] hover:text-[#0f7a6a] hover:shadow-md"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div ref={footerRef} className="fixed bottom-0 left-0 right-0 z-20">
           <div className="mx-auto w-full max-w-5xl px-4 pb-2">
             <FileUploadArea
               onFileSelect={handleFileSelect}

@@ -5,8 +5,9 @@ import {
   SignOutButton,
   SignUpButton,
 } from '@clerk/clerk-react';
+import { User } from 'lucide-react';
 import { useTranslate } from '@tolgee/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LanguageSwitch from '../components/LanguageSwitch';
 
@@ -16,6 +17,8 @@ const LandingPage = () => {
   const fullIntroText = t('landing.hero.intro');
   const [typedIntroText, setTypedIntroText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,6 +54,28 @@ const LandingPage = () => {
     };
   }, [fullIntroText]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!profileRef.current) return;
+      if (!profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f7f2ed] text-[#1f2937]">
       <div className="pointer-events-none absolute -left-[140px] -top-[180px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] blur-[0.4px]" />
@@ -69,11 +94,36 @@ const LandingPage = () => {
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <SignOutButton>
-                <button className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
-                  {t('landing.auth.signOut')}
+              <div ref={profileRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileOpen((prev) => !prev)}
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileOpen}
+                  aria-label={t('landing.auth.profileMenu')}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 text-[#0f7a6a] shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#f5f1ec] hover:shadow-[0_14px_30px_rgba(31,41,55,0.12)]"
+                >
+                  <User className="h-4 w-4" aria-hidden="true" />
                 </button>
-              </SignOutButton>
+                <div
+                  role="menu"
+                  aria-hidden={!isProfileOpen}
+                  className={`absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border border-[rgba(229,222,216,0.8)] bg-white/95 p-2 text-sm text-[#1f2937] shadow-[0_18px_40px_rgba(31,41,55,0.16)] backdrop-blur-sm transition-all duration-150 ${
+                    isProfileOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
+                  }`}
+                >
+                  <SignOutButton>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium text-[#5c6664] transition-colors hover:bg-[#f5f1ec]"
+                    >
+                      {t('landing.auth.signOut')}
+                    </button>
+                  </SignOutButton>
+                </div>
+              </div>
             </SignedIn>
           </div>
         </div>

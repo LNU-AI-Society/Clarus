@@ -110,6 +110,7 @@
   "languageSwitch.swedish": "Swedish",
   "landing.auth.signIn": "Sign in",
   "landing.auth.signOut": "Sign out",
+  "landing.auth.profileMenu": "Profile menu",
   "landing.badge": "AI legal assistant",
   "landing.caseSummary.answer": "Yes, if the contract allows it and you give notice in writing.",
   "landing.caseSummary.finding1": "Probation clause not enforceable",

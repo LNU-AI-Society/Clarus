@@ -110,6 +110,7 @@
   "languageSwitch.swedish": "Svenska",
   "landing.auth.signIn": "Logga in",
   "landing.auth.signOut": "Logga ut",
+  "landing.auth.profileMenu": "Profilmeny",
   "landing.badge": "AI-juridisk assistent",
   "landing.caseSummary.answer": "Ja, om avtalet tillåter det och du säger upp skriftligen.",
   "landing.caseSummary.finding1": "Provanställningsklausul ej giltig",
