@@ -2,14 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getHistory } from '../services/api';
 import { GuidedSession } from '../types';
-import LanguageSwitch from '../components/LanguageSwitch';
-import {
-    ArrowLeft,
-    FileText,
-    CheckCircle,
-    Clock,
-    ArrowRight
-} from 'lucide-react';
+import Navbar from '../components/Navbar';
+import { FileText, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 import { useTranslate } from '@tolgee/react';
 
 const WorkflowsPage = () => {
@@ -28,28 +22,18 @@ const WorkflowsPage = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-
-            {/* Navbar */}
-            <header className="sticky top-0 z-10 border-b border-indigo-100 bg-white/80 backdrop-blur-md">
-                <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-800">{t('workflows.title')}</h1>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <LanguageSwitch />
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                        >
-                            <ArrowLeft size={16} />
-                            {t('workflows.backToDashboard')}
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Navbar
+                backTo="/dashboard"
+                backAriaLabel={t('workflows.backToDashboard')}
+                containerClassName="max-w-4xl px-6"
+            />
 
             <main className="mx-auto max-w-4xl p-6">
-
+                <div className="mb-6">
+                    <h1 className="text-xl font-bold tracking-tight text-slate-800">
+                        {t('workflows.title')}
+                    </h1>
+                </div>
                 {isLoading ? (
                     <div className="flex h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
                         <div className="flex items-center gap-2">

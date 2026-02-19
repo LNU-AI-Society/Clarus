@@ -1,16 +1,14 @@
+import Navbar from '../components/Navbar';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
-import LanguageSwitch from '../components/LanguageSwitch';
 import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
-import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 import { useTranslate } from '@tolgee/react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const ChatPage = () => {
-  const navigate = useNavigate();
   const { t } = useTranslate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -165,18 +163,8 @@ const ChatPage = () => {
         <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="fixed left-4 top-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a] sm:left-6 sm:top-6"
-          aria-label={t('chat.backToHomeAria')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="fixed right-4 top-4 z-30 sm:right-6 sm:top-6">
-          <LanguageSwitch />
-        </div>
-        <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
+        <Navbar backTo="/" backAriaLabel={t('chat.backToHomeAria')} />
+        <main className="flex flex-1 flex-col pt-6" style={{ paddingBottom: footerPadding }}>
           {isEmpty ? (
             <div className="flex flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">

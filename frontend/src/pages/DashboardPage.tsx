@@ -1,6 +1,6 @@
 import { getHistory } from '../services/api';
 import { GuidedSession } from '../types';
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import { FileText, CheckCircle, Clock } from 'lucide-react';
 import { useTranslate } from '@tolgee/react';
 import { useEffect, useState } from 'react';
@@ -21,34 +21,22 @@ const DashboardPage = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+    <div className="relative min-h-screen text-[#1f2937]">
+      <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
+        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      </div>
       <div className="relative z-10 min-h-screen">
-        <header className="border-b border-[rgba(229,222,216,0.8)] bg-white/75 backdrop-blur-[18px]">
-          <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-[18px] py-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#e8f3f0] px-3 py-1.5 text-xs font-semibold text-[#0f7a6a]">
-                {t('dashboard.badge')}
-              </span>
-              <span className="text-sm font-semibold text-[#1f2937]">
-                {t('dashboard.subtitle')}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <LanguageSwitch />
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="text-sm font-medium text-[#5c6664] hover:text-[#1f2937]"
-              >
-                {t('dashboard.backToHome')}
-              </button>
-            </div>
-          </div>
-        </header>
-
+        <Navbar backTo="/" backAriaLabel={t('dashboard.backToHome')} />
         <main className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+          <div className="mb-8 flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#e8f3f0] px-3 py-1.5 text-xs font-semibold text-[#0f7a6a]">
+              {t('dashboard.badge')}
+            </span>
+            <span className="text-sm font-semibold text-[#1f2937]">
+              {t('dashboard.subtitle')}
+            </span>
+          </div>
           <div className="grid gap-8 md:grid-cols-2">
             <section>
               <div className="mb-4 flex items-center justify-between">
