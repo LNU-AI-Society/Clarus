@@ -7,7 +7,13 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'prettier',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'convex/_generated/**', '**/convex/_generated/**'],
+  ignorePatterns: [
+    'dist',
+    '.eslintrc.cjs',
+    'src/routeTree.gen.ts',
+    'convex/_generated/**',
+    '**/convex/_generated/**',
+  ],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   rules: {

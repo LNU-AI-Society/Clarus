@@ -1,7 +1,7 @@
 import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/clerk-react';
+import { Link } from '@tanstack/react-router';
 import { useTranslate } from '@tolgee/react';
 import { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import BackNavigation from './BackNavigation';
 import LanguageSwitch from './LanguageSwitch';
 import ProfileMenu from './ProfileMenu';

@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 type BackNavigationProps = {
   to: string;
@@ -19,7 +19,7 @@ const BackNavigation = ({ to, ariaLabel, className, isFixed = true }: BackNaviga
     >
       <button
         type="button"
-        onClick={() => navigate(to)}
+        onClick={() => navigate({ to })}
         aria-label={ariaLabel}
         className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a]"
       >

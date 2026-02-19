@@ -1,9 +1,9 @@
 import LanguageSwitch from '../components/LanguageSwitch';
 import { SignedIn, SignedOut, SignInButton, SignOutButton, SignUpButton } from '@clerk/clerk-react';
+import { useNavigate } from '@tanstack/react-router';
 import { T, useTranslate } from '@tolgee/react';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -171,14 +171,14 @@ const LandingPage = () => {
                 <button
                   type="button"
                   className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-px"
-                  onClick={() => navigate('/chat')}
+                  onClick={() => navigate({ to: '/chat' })}
                 >
                   <T keyName="landing.cta.openChat" />
                 </button>
                 <button
                   type="button"
                   className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:shadow-card inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 font-semibold transition-all duration-200"
-                  onClick={() => navigate('/guided')}
+                  onClick={() => navigate({ to: '/guided' })}
                 >
                   <T keyName="landing.cta.exploreWorkflows" />
                 </button>
