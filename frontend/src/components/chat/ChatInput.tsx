@@ -1,4 +1,5 @@
 import { Send } from 'lucide-react';
+import { useTranslate } from '@tolgee/react';
 import React, { KeyboardEvent, useRef, useEffect } from 'react';
 
 interface ChatInputProps {
@@ -16,6 +17,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isLoading,
   isEmbedded = false,
 }) => {
+  const { t } = useTranslate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -53,7 +55,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a legal question..."
+          placeholder={t('chatInput.placeholder')}
           className="max-h-[150px] w-full resize-none border-none bg-transparent py-4 pl-5 pr-12 leading-relaxed text-[#2c3b3a] placeholder-[#9aa2a0] focus:ring-0"
           rows={1}
           disabled={isLoading}

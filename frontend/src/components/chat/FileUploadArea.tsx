@@ -1,4 +1,5 @@
 import { Upload } from 'lucide-react';
+import { useTranslate } from '@tolgee/react';
 import React, { useRef, useState } from 'react';
 
 interface FileUploadAreaProps {
@@ -12,6 +13,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
   isLoading,
   className,
 }) => {
+  const { t } = useTranslate();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,8 +61,8 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
 
       <div className="flex flex-col items-center gap-2 text-[#6b6f6c]">
         <Upload className="h-8 w-8 text-[#0f7a6a]" />
-        <p className="font-medium text-[#2c3b3a]">Click or drag file to analyze</p>
-        <p className="text-xs">Supports PDF, TXT</p>
+        <p className="font-medium text-[#2c3b3a]">{t('fileUpload.title')}</p>
+        <p className="text-xs">{t('fileUpload.supports')}</p>
       </div>
     </div>
   );
