@@ -108,6 +108,10 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function normalizeQuery(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function buildSnippet(value: string): string {
   const normalized = normalizeWhitespace(value);
   if (normalized.length <= SNIPPET_MAX_CHARS) {
@@ -138,7 +142,7 @@ export async function searchRagChunks(
   ctx: SearchCtx,
   args: SearchRagArgs,
 ): Promise<RagSearchResult> {
-  const query = args.query.trim();
+  const query = normalizeQuery(args.query);
   const siteId = resolveSiteId(args.site_id);
   const embeddingModel = resolveEmbeddingModel(args.embedding_model);
 
