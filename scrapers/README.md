@@ -1,3 +1,9 @@
+# Known issues (solve later)
+
+- The cleanup for the ingestion into the vector table is kinda broken, duplicates could occur
+- Currently only migrationsverket is scraped, more websites are needed
+- Currently all languages are scraped and ingested, we might wanna change this to optimize it down the line
+
 # Scrapers
 
 This directory contains standalone scraping tools used to build RAG-ready datasets.
