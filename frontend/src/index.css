@@ -1,6 +1,81 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-display: 'Sora', 'DM Sans', sans-serif;
+
+  --color-app-bg: #f7f2ed;
+  --color-app-bg-soft: #fbf7f2;
+  --color-app-bg-cool: #eef6f3;
+
+  --color-ink: #1f2937;
+  --color-muted: #5c6664;
+  --color-subtle: #6b7280;
+  --color-faint: #9aa2a0;
+
+  --color-brand: #0f7a6a;
+  --color-brand-hover: #0b6b5e;
+  --color-brand-soft: #e8f3f0;
+  --color-brand-soft-alt: #f0f7f4;
+
+  --color-border: #e5ded8;
+  --color-border-strong: #a7b9b4;
+  --color-border-muted: #d8cdc6;
+
+  --color-surface: #ffffff;
+  --color-surface-soft: #fdfcfb;
+  --color-surface-muted: #f5f1ec;
+  --color-surface-cream: #f1eee9;
+  --color-surface-panel: #f8f3ee;
+  --color-surface-mint: #f1f5f4;
+  --color-surface-card: #f9fafb;
+
+  --color-positive: #2f9e7c;
+  --color-olive: #6b4e42;
+  --color-neutral: #6b6f6c;
+
+  --color-note: #7c8784;
+  --color-note-warm: #8b6b5f;
+  --color-note-dark: #4b3d36;
+
+  --color-chat: #2c3b3a;
+  --color-chat-soft: #334155;
+  --color-chat-hint: #54605e;
+
+  --color-halo-peach: #ffe7d6;
+  --color-halo-mint: #ddf4f1;
+  --color-halo-gold: #fff1cc;
+  --color-halo-track: #e4efec;
+  --color-ring-track: #cbd5d1;
+
+  --container-layout: 70rem;
+
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+  --radius-soft: 1.125rem;
+
+  --shadow-brand: 0 16px 30px rgb(15 122 106 / 0.28);
+  --shadow-soft: 0 10px 24px rgb(31 41 55 / 0.08);
+  --shadow-soft-hover: 0 14px 30px rgb(31 41 55 / 0.12);
+  --shadow-card: 0 14px 30px rgb(31 41 55 / 0.1);
+  --shadow-panel: 0 18px 40px rgb(31 41 55 / 0.12);
+  --shadow-popover: 0 18px 40px rgb(31 41 55 / 0.16);
+
+  --chat-footer-fallback-height: 15rem;
+
+  --animate-typewriter-blink: typewriterBlink 0.9s step-end infinite;
+}
+
+@utility animate-delay-150 {
+  animation-delay: 150ms;
+}
+
+@utility animate-delay-300 {
+  animation-delay: 300ms;
+}
+
 @keyframes typewriterBlink {
   0%,
   100% {

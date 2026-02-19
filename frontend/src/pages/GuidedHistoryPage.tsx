@@ -1,216 +1,237 @@
-import { getHistory } from '../services/api';
-import { GuidedSession } from '../types';
-import Navbar from '../components/Navbar';
+import LanguageSwitch from '../components/LanguageSwitch';
+import { api } from '../lib/convexApi';
+import type { GuidedSession } from '../types/guided';
+import { useNavigate } from '@tanstack/react-router';
+import { T } from '@tolgee/react';
+import { useQuery } from 'convex/react';
 import {
-  CheckCircle,
-  Clock,
   AlertTriangle,
+  ArrowLeft,
   Calendar,
-  Plus,
+  CheckCircle,
   ChevronRight,
+  Clock,
   FileText,
+  Plus,
 } from 'lucide-react';
-import { useTranslate } from '@tolgee/react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+const workflowTitleKeys: Record<string, string> = {
+  renewal: 'guidedHistory.workflow.renewal.title',
+  change_employer: 'guidedHistory.workflow.change_employer.title',
+  job_loss: 'guidedHistory.workflow.job_loss.title',
+};
+
+const workflowDescriptionKeys: Record<string, string> = {
+  renewal: 'guidedHistory.workflow.renewal.description',
+  change_employer: 'guidedHistory.workflow.change_employer.description',
+  job_loss: 'guidedHistory.workflow.job_loss.description',
+};
+
+const formatWorkflowTitle = (workflowId: string) => {
+  return workflowId.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+};
 
 const GuidedHistoryPage = () => {
   const navigate = useNavigate();
-  const { t } = useTranslate();
-  const [sessions, setSessions] = useState<GuidedSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-    getHistory()
-      .then((data) => {
-        setSessions(data);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setIsLoading(false);
-      });
-  }, []);
-
-  const getWorkflowTitle = (workflowId: string) => {
-    const titles: Record<string, string> = {
-      renewal: t('guidedHistory.workflow.renewal.title'),
-      change_employer: t('guidedHistory.workflow.change_employer.title'),
-      job_loss: t('guidedHistory.workflow.job_loss.title'),
-    };
-    return (
-      titles[workflowId] || workflowId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-    );
-  };
-
-  const getWorkflowDescription = (workflowId: string) => {
-    const descriptions: Record<string, string> = {
-      renewal: t('guidedHistory.workflow.renewal.description'),
-      change_employer: t('guidedHistory.workflow.change_employer.description'),
-      job_loss: t('guidedHistory.workflow.job_loss.description'),
-    };
-    return descriptions[workflowId] || t('guidedHistory.workflow.defaultDescription');
-  };
+  const sessionsQuery = useQuery(api.guided.getHistory);
+  const sessions = (sessionsQuery ?? []) as GuidedSession[];
+  const isLoading = sessionsQuery === undefined;
 
   return (
-    <div className="relative min-h-screen text-[#1f2937]">
-      <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      </div>
+    <div className="from-app-bg via-app-bg-soft to-app-bg-cool text-ink relative min-h-screen overflow-hidden bg-linear-to-br">
+      <div className="from-halo-peach/90 pointer-events-none absolute -top-60 -left-52 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
+      <div className="from-halo-mint/80 pointer-events-none absolute -right-56 -bottom-64 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       <div className="relative z-10 min-h-screen">
-        <Navbar
-          backTo="/guided"
-          backAriaLabel={t('guidedHistory.back')}
-          actions={
+        <main className="max-w-layout mx-auto w-full px-4 py-10 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => navigate('/guided')}
-              className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
+              onClick={() => navigate({ to: '/guided' })}
+              className="text-muted hover:text-ink inline-flex items-center gap-2 text-sm font-medium transition"
             >
-              <Plus className="h-4 w-4" />
-              {t('guidedHistory.newSession')}
+              <ArrowLeft className="h-4 w-4" />
+              <T keyName="guidedHistory.back" />
             </button>
-          }
-        />
-        <main className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+            <div className="flex items-center gap-3">
+              <LanguageSwitch />
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/guided' })}
+                className="bg-brand shadow-brand hover:bg-brand-hover mt-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
+              >
+                <Plus className="h-4 w-4" />
+                <T keyName="guidedHistory.newSession" />
+              </button>
+            </div>
+          </div>
           {isLoading ? (
-            <div className="flex min-h-[400px] items-center justify-center">
-              <div className="flex items-center gap-3 text-[#9aa2a0]">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#e5ded8] border-t-[#0f7a6a]" />
-                <span>{t('guidedHistory.loading')}</span>
+            <div className="flex min-h-96 items-center justify-center">
+              <div className="text-faint flex items-center gap-3">
+                <div className="border-border border-t-brand h-8 w-8 animate-spin rounded-full border-4" />
+                <span>
+                  <T keyName="guidedHistory.loading" />
+                </span>
               </div>
             </div>
           ) : sessions.length === 0 ? (
-            <div className="mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border border-[#efe7e0] bg-white/80 p-12 text-center shadow-[0_18px_40px_rgba(31,41,55,0.12)]">
-              <div className="mb-6 rounded-full bg-[#f1eee9] p-6">
-                <FileText className="h-12 w-12 text-[#6b4e42]" />
+            <div className="border-border bg-surface/80 shadow-panel mx-auto flex max-w-2xl flex-col items-center justify-center rounded-3xl border p-12 text-center">
+              <div className="bg-surface-cream mb-6 rounded-full p-6">
+                <FileText className="text-olive h-12 w-12" />
               </div>
-              <h2 className="mb-3 text-2xl font-bold text-[#1f2937]">
-                {t('guidedHistory.empty.title')}
+              <h2 className="text-ink mb-3 text-2xl font-bold">
+                <T keyName="guidedHistory.empty.title" />
               </h2>
-              <p className="mb-8 text-[#6b7280]">
-                {t('guidedHistory.empty.body')}
+              <p className="text-subtle mb-8">
+                <T keyName="guidedHistory.empty.body" />
               </p>
               <button
                 type="button"
-                onClick={() => navigate('/guided')}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
+                onClick={() => navigate({ to: '/guided' })}
+                className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-px"
               >
                 <Plus className="h-5 w-5" />
-                {t('guidedHistory.empty.cta')}
+                <T keyName="guidedHistory.empty.cta" />
               </button>
             </div>
           ) : (
             <>
               <div className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-[#1f2937]">
-                  {t('guidedHistory.title')}
+                <h1 className="text-ink mb-2 text-3xl font-bold">
+                  <T keyName="guidedHistory.title" />
                 </h1>
-                <p className="text-[#6b7280]">{t('guidedHistory.subtitle')}</p>
+                <p className="text-subtle">
+                  <T keyName="guidedHistory.subtitle" />
+                </p>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="group flex flex-col rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-6 shadow-[0_14px_30px_rgba(31,41,55,0.1)] transition-all duration-300 hover:-translate-y-0.5"
-                  >
-                    <div className="mb-4 flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="mb-1 text-lg font-bold text-[#1f2937] transition-colors group-hover:text-[#0f7a6a]">
-                          {getWorkflowTitle(session.workflow_id)}
-                        </h3>
-                        <p className="text-sm text-[#6b7280]">
-                          {getWorkflowDescription(session.workflow_id)}
-                        </p>
-                      </div>
-                      {session.is_complete ? (
-                        <span className="flex items-center gap-1 rounded-full bg-[#e8f3f0] px-3 py-1 text-xs font-medium text-[#0f7a6a]">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          {t('guidedHistory.status.complete')}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 rounded-full bg-[#f1eee9] px-3 py-1 text-xs font-medium text-[#6b6f6c]">
-                          <Clock className="h-3.5 w-3.5" />
-                          {t('guidedHistory.status.inProgress')}
-                        </span>
-                      )}
-                    </div>
+                {sessions.map((session) => {
+                  const workflowTitleKey = workflowTitleKeys[session.workflow_id];
+                  const workflowDescriptionKey =
+                    workflowDescriptionKeys[session.workflow_id] ??
+                    'guidedHistory.workflow.defaultDescription';
 
-                    <div className="mb-4 flex flex-wrap gap-3">
-                      <div className="flex items-center gap-1.5 rounded-lg bg-[#f9f5f1] px-3 py-1.5 text-xs text-[#6b7280]">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {t('guidedHistory.sessionId', { id: session.id.slice(0, 8) })}
-                      </div>
-                      {session.tasks.length > 0 && (
-                        <div className="flex items-center gap-1.5 rounded-lg bg-[#e8f3f0] px-3 py-1.5 text-xs text-[#0f7a6a]">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          {session.tasks.length}{' '}
-                          {session.tasks.length === 1
-                            ? t('guidedHistory.tasks.singular')
-                            : t('guidedHistory.tasks.plural')}
-                        </div>
-                      )}
-                      {session.warnings.length > 0 && (
-                        <div className="flex items-center gap-1.5 rounded-lg bg-[#fff7ed] px-3 py-1.5 text-xs text-amber-700">
-                          <AlertTriangle className="h-3.5 w-3.5" />
-                          {session.warnings.length}{' '}
-                          {session.warnings.length === 1
-                            ? t('guidedHistory.warnings.singular')
-                            : t('guidedHistory.warnings.plural')}
-                        </div>
-                      )}
-                    </div>
-
-                    {session.warnings.length > 0 && (
-                      <div className="mb-4 flex-1">
-                        <div className="rounded-lg border border-amber-100 bg-[#fff7ed] p-3">
-                          <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-800">
-                            <AlertTriangle className="h-3 w-3" />
-                            {session.warnings.length === 1
-                              ? t('guidedHistory.warningBadge.single')
-                              : t('guidedHistory.warningBadge.multiple')}
-                          </div>
-                          <p className="line-clamp-2 text-xs text-amber-900">{session.warnings[0]}</p>
-                          {session.warnings.length > 1 && (
-                            <p className="mt-1 text-xs text-amber-700">
-                              {session.warnings.length === 2
-                                ? t('guidedHistory.moreWarning', {
-                                    count: session.warnings.length - 1,
-                                  })
-                                : t('guidedHistory.moreWarnings', {
-                                    count: session.warnings.length - 1,
-                                  })}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => navigate('/guided')}
-                      className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-[#e5ded8] py-2.5 text-sm font-medium text-[#5c6664] transition-all hover:border-[#0f7a6a] hover:bg-[#e8f3f0] hover:text-[#0f7a6a]"
+                  return (
+                    <div
+                      key={session.id}
+                      className="group rounded-card border-border/80 bg-surface shadow-card flex flex-col border p-6 transition-all duration-300 hover:-translate-y-0.5"
                     >
-                      {session.is_complete
-                        ? t('guidedHistory.button.viewDetails')
-                        : t('guidedHistory.button.resume')}
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="mb-4 flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-ink group-hover:text-brand mb-1 text-lg font-bold transition-colors">
+                            {workflowTitleKey ? (
+                              <T keyName={workflowTitleKey} />
+                            ) : (
+                              formatWorkflowTitle(session.workflow_id)
+                            )}
+                          </h3>
+                          <p className="text-subtle text-sm">
+                            <T keyName={workflowDescriptionKey} />
+                          </p>
+                        </div>
+                        {session.is_complete ? (
+                          <span className="bg-brand-soft text-brand flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            <T keyName="guidedHistory.status.complete" />
+                          </span>
+                        ) : (
+                          <span className="bg-surface-cream text-neutral flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium">
+                            <Clock className="h-3.5 w-3.5" />
+                            <T keyName="guidedHistory.status.inProgress" />
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mb-4 flex flex-wrap gap-3">
+                        <div className="bg-surface-panel text-subtle flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <T
+                            keyName="guidedHistory.sessionId"
+                            params={{ id: session.id.slice(0, 8) }}
+                          />
+                        </div>
+                        {session.tasks.length > 0 && (
+                          <div className="bg-brand-soft text-brand flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            {session.tasks.length}{' '}
+                            {session.tasks.length === 1 ? (
+                              <T keyName="guidedHistory.tasks.singular" />
+                            ) : (
+                              <T keyName="guidedHistory.tasks.plural" />
+                            )}
+                          </div>
+                        )}
+                        {session.warnings.length > 0 && (
+                          <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            {session.warnings.length}{' '}
+                            {session.warnings.length === 1 ? (
+                              <T keyName="guidedHistory.warnings.singular" />
+                            ) : (
+                              <T keyName="guidedHistory.warnings.plural" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {session.warnings.length > 0 && (
+                        <div className="mb-4 flex-1">
+                          <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
+                            <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-800">
+                              <AlertTriangle className="h-3 w-3" />
+                              {session.warnings.length === 1 ? (
+                                <T keyName="guidedHistory.warningBadge.single" />
+                              ) : (
+                                <T keyName="guidedHistory.warningBadge.multiple" />
+                              )}
+                            </div>
+                            <p className="line-clamp-2 text-xs text-amber-900">
+                              {session.warnings[0]}
+                            </p>
+                            {session.warnings.length > 1 && (
+                              <p className="mt-1 text-xs text-amber-700">
+                                {session.warnings.length === 2 ? (
+                                  <T
+                                    keyName="guidedHistory.moreWarning"
+                                    params={{ count: session.warnings.length - 1 }}
+                                  />
+                                ) : (
+                                  <T
+                                    keyName="guidedHistory.moreWarnings"
+                                    params={{ count: session.warnings.length - 1 }}
+                                  />
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: '/guided' })}
+                        className="border-border text-muted hover:border-brand hover:bg-brand-soft hover:text-brand mt-auto flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-all"
+                      >
+                        {session.is_complete ? (
+                          <T keyName="guidedHistory.button.viewDetails" />
+                        ) : (
+                          <T keyName="guidedHistory.button.resume" />
+                        )}
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-8 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => navigate('/guided')}
-                  className="group flex items-center gap-2 rounded-2xl bg-white px-6 py-3 font-medium text-[#5c6664] shadow-sm transition-all hover:border-[#0f7a6a] hover:text-[#0f7a6a]"
+                  onClick={() => navigate({ to: '/guided' })}
+                  className="group bg-surface text-muted hover:border-brand hover:text-brand flex items-center gap-2 rounded-2xl border border-transparent px-6 py-3 font-medium shadow-sm transition-all"
                 >
-                  <Plus className="h-5 w-5 text-[#0f7a6a] transition-transform group-hover:scale-110" />
-                  {t('guidedHistory.button.startNew')}
+                  <Plus className="text-brand h-5 w-5 transition-transform group-hover:scale-110" />
+                  <T keyName="guidedHistory.button.startNew" />
                 </button>
               </div>
             </>
