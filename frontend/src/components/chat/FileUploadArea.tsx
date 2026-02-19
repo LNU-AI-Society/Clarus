@@ -1,5 +1,5 @@
+import { T } from '@tolgee/react';
 import { Upload } from 'lucide-react';
-import { useTranslate } from '@tolgee/react';
 import React, { useRef, useState } from 'react';
 
 interface FileUploadAreaProps {
@@ -8,12 +8,7 @@ interface FileUploadAreaProps {
   className?: string;
 }
 
-const FileUploadArea: React.FC<FileUploadAreaProps> = ({
-  onFileSelect,
-  isLoading,
-  className,
-}) => {
-  const { t } = useTranslate();
+const FileUploadArea: React.FC<FileUploadAreaProps> = ({ onFileSelect, isLoading, className }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,13 +38,21 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
     <div
       className={`mb-6 cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
         isDragging
-          ? 'border-[#0f7a6a] bg-[#e8f3f0]'
-          : 'border-[#d8cdc6] hover:border-[#a7b9b4] hover:bg-white/70'
+          ? 'border-brand bg-brand-soft'
+          : 'border-border-muted hover:border-border-strong hover:bg-surface/70'
       } ${isLoading ? 'pointer-events-none opacity-50' : ''} ${className ?? ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <input
         type="file"
@@ -59,10 +62,14 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
         accept=".pdf,.txt,.md"
       />
 
-      <div className="flex flex-col items-center gap-2 text-[#6b6f6c]">
-        <Upload className="h-8 w-8 text-[#0f7a6a]" />
-        <p className="font-medium text-[#2c3b3a]">{t('fileUpload.title')}</p>
-        <p className="text-xs">{t('fileUpload.supports')}</p>
+      <div className="text-neutral flex flex-col items-center gap-2">
+        <Upload className="text-brand h-8 w-8" />
+        <p className="text-chat font-medium">
+          <T keyName="fileUpload.title" />
+        </p>
+        <p className="text-xs">
+          <T keyName="fileUpload.supports" />
+        </p>
       </div>
     </div>
   );

@@ -29,7 +29,8 @@ Clarus helps users understand their options, navigate common legal processes, an
 
 ## Architecture Summary
 
-- UI calls Convex queries, mutations, and actions through `frontend/src/services/api.ts`
+- UI calls Convex queries, mutations, and actions directly via `useQuery`, `useMutation`, and `useAction`
+- Convex auth is integrated with Clerk using `ConvexProviderWithClerk` and `convex/auth.config.ts`
 - Streaming chat uses the Convex HTTP route `/chat/stream`
 - Guided workflows are defined in `frontend/convex/workflows.ts`
 - Guided sessions are stored in the `guidedSessions` table
@@ -38,13 +39,16 @@ Clarus helps users understand their options, navigate common legal processes, an
 ## Environment Variables
 
 Frontend:
+
 - `VITE_CLERK_PUBLISHABLE_KEY` Clerk publishable key
 - `VITE_CONVEX_URL` Convex deployment URL, default `http://localhost:3210`
 - `VITE_CONVEX_SITE_URL` Optional Convex site URL used for streaming endpoint
 
 Convex backend:
+
 - `GEMINI_API_KEY` Required for chat responses
 - `GEMINI_MODEL` Optional, default `gemini-3-flash-preview`
+- `CLERK_JWT_ISSUER_DOMAIN` Required Clerk issuer domain for Convex auth
 - `CLIENT_ORIGIN` Optional CORS origin for streaming endpoint, default `http://localhost:5173`
 
 ## Local Development

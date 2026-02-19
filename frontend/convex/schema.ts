@@ -5,6 +5,7 @@ const RAG_EMBEDDING_DIMENSIONS = 1536;
 
 export default defineSchema({
   guidedSessions: defineTable({
+    user_id: v.optional(v.string()),
     workflow_id: v.string(),
     current_step_id: v.optional(v.string()),
     answers: v.record(v.string(), v.string()),
@@ -20,12 +21,17 @@ export default defineSchema({
     warnings: v.array(v.string()),
     created_at: v.number(),
     updated_at: v.number(),
-  }),
+  }).index('by_user_created', ['user_id', 'created_at']),
   chatMessages: defineTable({
     role: v.string(),
     content: v.string(),
     created_at: v.number(),
   }),
+  actionUsageEvents: defineTable({
+    user_id: v.string(),
+    action: v.string(),
+    created_at: v.number(),
+  }).index('by_user_action_created', ['user_id', 'action', 'created_at']),
   ragChunks: defineTable({
     site_id: v.string(),
     source: v.string(),

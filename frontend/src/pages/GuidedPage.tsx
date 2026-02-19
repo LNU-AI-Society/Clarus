@@ -1,6 +1,8 @@
-import { getWorkflows, startSession, getStep, submitAnswer } from '../services/api';
-import { WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
 import LanguageSwitch from '../components/LanguageSwitch';
+import { T, useTranslate } from '@tolgee/react';
+import { api } from '../../convex/_generated/api';
+import { useMutation, useQuery } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -9,182 +11,185 @@ import {
   CheckCircle,
   ChevronRight,
 } from 'lucide-react';
-import { useTranslate } from '@tolgee/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const workflowCopy: Record<string, { titleKey: string; descriptionKey: string }> = {
+  renewal: {
+    titleKey: 'guided.workflows.renewal.title',
+    descriptionKey: 'guided.workflows.renewal.description',
+  },
+  change_employer: {
+    titleKey: 'guided.workflows.change_employer.title',
+    descriptionKey: 'guided.workflows.change_employer.description',
+  },
+};
+
+const stepCopy: Record<string, Record<string, { titleKey: string; questionKey: string }>> = {
+  renewal: {
+    expiry_date: {
+      titleKey: 'guided.steps.renewal.expiry_date.title',
+      questionKey: 'guided.steps.renewal.expiry_date.question',
+    },
+    employment_status: {
+      titleKey: 'guided.steps.renewal.employment_status.title',
+      questionKey: 'guided.steps.renewal.employment_status.question',
+    },
+    supporting_docs: {
+      titleKey: 'guided.steps.renewal.supporting_docs.title',
+      questionKey: 'guided.steps.renewal.supporting_docs.question',
+    },
+  },
+  change_employer: {
+    permit_duration: {
+      titleKey: 'guided.steps.change_employer.permit_duration.title',
+      questionKey: 'guided.steps.change_employer.permit_duration.question',
+    },
+    new_role: {
+      titleKey: 'guided.steps.change_employer.new_role.title',
+      questionKey: 'guided.steps.change_employer.new_role.question',
+    },
+  },
+};
+
+const optionCopy: Record<string, Record<string, Record<string, string>>> = {
+  renewal: {
+    employment_status: {
+      'Yes, same employer': 'guided.steps.renewal.employment_status.options.same',
+      'No, switching employers': 'guided.steps.renewal.employment_status.options.switch',
+    },
+  },
+  change_employer: {
+    permit_duration: {
+      'Less than 24 months': 'guided.steps.change_employer.permit_duration.options.less',
+      '24 months or more': 'guided.steps.change_employer.permit_duration.options.more',
+    },
+  },
+};
+
+const taskCopy: Record<
+  string,
+  { titleKey: string; descriptionKey: string; requiresDate?: boolean }
+> = {
+  't-renewal-1': {
+    titleKey: 'guided.tasks.renewal.prepare.title',
+    descriptionKey: 'guided.tasks.renewal.prepare.description',
+    requiresDate: true,
+  },
+  't-change-1': {
+    titleKey: 'guided.tasks.change_employer.new_application.title',
+    descriptionKey: 'guided.tasks.change_employer.new_application.description',
+  },
+  't-change-2': {
+    titleKey: 'guided.tasks.change_employer.role_alignment.title',
+    descriptionKey: 'guided.tasks.change_employer.role_alignment.description',
+  },
+  't-general-1': {
+    titleKey: 'guided.tasks.general.review.title',
+    descriptionKey: 'guided.tasks.general.review.description',
+  },
+};
+
+const warningCopy: Record<string, string> = {
+  'Switching employers may require a new permit application.':
+    'guided.warnings.renewal.switch_employer',
+  'Changing employers within 24 months requires a new application.':
+    'guided.warnings.change_employer.within_24_months',
+};
+
+type WorkflowMetadata = FunctionReturnType<typeof api.guided.listWorkflows>[number];
+type GuidedStep = FunctionReturnType<typeof api.guided.getWorkflowStep>;
+type GuidedSession = FunctionReturnType<typeof api.guided.getSession>;
 
 const GuidedPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslate();
-  const [workflows, setWorkflows] = useState<WorkflowMetadata[]>([]);
   const [session, setSession] = useState<GuidedSession | null>(null);
-  const [currentStep, setCurrentStep] = useState<GuidedStep | null>(null);
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const workflows = (useQuery(api.guided.listWorkflows) ?? []) as WorkflowMetadata[];
+  const currentStep = useQuery(
+    api.guided.getWorkflowStep,
+    session && session.current_step_id && !session.is_complete
+      ? {
+          workflowId: session.workflow_id,
+          stepId: session.current_step_id,
+        }
+      : 'skip',
+  ) as GuidedStep | undefined;
+  const startSessionMutation = useMutation(api.guided.startSession);
+  const submitAnswerMutation = useMutation(api.guided.submitAnswer);
 
-  const workflowCopy: Record<string, { title: string; description: string }> = {
-    renewal: {
-      title: t('guided.workflows.renewal.title'),
-      description: t('guided.workflows.renewal.description'),
-    },
-    change_employer: {
-      title: t('guided.workflows.change_employer.title'),
-      description: t('guided.workflows.change_employer.description'),
-    },
+  const getWorkflowTitleKey = (workflowId: string) => workflowCopy[workflowId]?.titleKey;
+
+  const getWorkflowDescriptionKey = (workflowId: string) =>
+    workflowCopy[workflowId]?.descriptionKey;
+
+  const getStepTitleKey = (workflowId: string, stepId: string) =>
+    stepCopy[workflowId]?.[stepId]?.titleKey;
+
+  const getStepQuestionKey = (workflowId: string, stepId: string) =>
+    stepCopy[workflowId]?.[stepId]?.questionKey;
+
+  const getOptionLabelKey = (workflowId: string, stepId: string, option: string) =>
+    optionCopy[workflowId]?.[stepId]?.[option];
+
+  const renderTaskTitle = (task: GuidedSession['tasks'][number]) => {
+    const config = taskCopy[task.id];
+    return config ? <T keyName={config.titleKey} /> : task.title;
   };
 
-  const stepCopy: Record<string, Record<string, { title: string; question: string }>> = {
-    renewal: {
-      expiry_date: {
-        title: t('guided.steps.renewal.expiry_date.title'),
-        question: t('guided.steps.renewal.expiry_date.question'),
-      },
-      employment_status: {
-        title: t('guided.steps.renewal.employment_status.title'),
-        question: t('guided.steps.renewal.employment_status.question'),
-      },
-      supporting_docs: {
-        title: t('guided.steps.renewal.supporting_docs.title'),
-        question: t('guided.steps.renewal.supporting_docs.question'),
-      },
-    },
-    change_employer: {
-      permit_duration: {
-        title: t('guided.steps.change_employer.permit_duration.title'),
-        question: t('guided.steps.change_employer.permit_duration.question'),
-      },
-      new_role: {
-        title: t('guided.steps.change_employer.new_role.title'),
-        question: t('guided.steps.change_employer.new_role.question'),
-      },
-    },
-  };
-
-  const optionCopy: Record<string, Record<string, Record<string, string>>> = {
-    renewal: {
-      employment_status: {
-        'Yes, same employer': t('guided.steps.renewal.employment_status.options.same'),
-        'No, switching employers': t('guided.steps.renewal.employment_status.options.switch'),
-      },
-    },
-    change_employer: {
-      permit_duration: {
-        'Less than 24 months': t('guided.steps.change_employer.permit_duration.options.less'),
-        '24 months or more': t('guided.steps.change_employer.permit_duration.options.more'),
-      },
-    },
-  };
-
-  const taskCopy: Record<
-    string,
-    { titleKey: string; descriptionKey: string; requiresDate?: boolean }
-  > = {
-    't-renewal-1': {
-      titleKey: 'guided.tasks.renewal.prepare.title',
-      descriptionKey: 'guided.tasks.renewal.prepare.description',
-      requiresDate: true,
-    },
-    't-change-1': {
-      titleKey: 'guided.tasks.change_employer.new_application.title',
-      descriptionKey: 'guided.tasks.change_employer.new_application.description',
-    },
-    't-change-2': {
-      titleKey: 'guided.tasks.change_employer.role_alignment.title',
-      descriptionKey: 'guided.tasks.change_employer.role_alignment.description',
-    },
-    't-general-1': {
-      titleKey: 'guided.tasks.general.review.title',
-      descriptionKey: 'guided.tasks.general.review.description',
-    },
-  };
-
-  const warningCopy: Record<string, string> = {
-    'Switching employers may require a new permit application.':
-      'guided.warnings.renewal.switch_employer',
-    'Changing employers within 24 months requires a new application.':
-      'guided.warnings.change_employer.within_24_months',
-  };
-
-  const getWorkflowTitle = (workflow: WorkflowMetadata) =>
-    workflowCopy[workflow.id]?.title ?? workflow.title;
-
-  const getWorkflowDescription = (workflow: WorkflowMetadata) =>
-    workflowCopy[workflow.id]?.description ?? workflow.description;
-
-  const getStepTitle = (workflowId: string, stepId: string, fallback: string) =>
-    stepCopy[workflowId]?.[stepId]?.title ?? fallback;
-
-  const getStepQuestion = (workflowId: string, stepId: string, fallback: string) =>
-    stepCopy[workflowId]?.[stepId]?.question ?? fallback;
-
-  const getOptionLabel = (workflowId: string, stepId: string, option: string) =>
-    optionCopy[workflowId]?.[stepId]?.[option] ?? option;
-
-  const translateTask = (task: { id: string; title: string; description: string; due_date?: string }) => {
+  const renderTaskDescription = (task: GuidedSession['tasks'][number]) => {
     const config = taskCopy[task.id];
     if (!config) {
-      return task;
+      return task.description;
     }
 
-    const description = config.requiresDate
-      ? task.due_date
-        ? t(config.descriptionKey, { date: task.due_date })
-        : task.description
-      : t(config.descriptionKey);
+    if (config.requiresDate && task.due_date) {
+      return <T keyName={config.descriptionKey} params={{ date: task.due_date }} />;
+    }
 
-    return {
-      ...task,
-      title: t(config.titleKey),
-      description,
-    };
+    if (config.requiresDate) {
+      return task.description;
+    }
+
+    return <T keyName={config.descriptionKey} />;
   };
 
-  const translateWarning = (warning: string) => {
+  const renderWarning = (warning: string) => {
     const key = warningCopy[warning];
-    return key ? t(key) : warning;
+    return key ? <T keyName={key} /> : warning;
   };
 
   const topRow = (
     <header className="relative z-20">
-      <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-[18px] py-5 sm:px-6">
+      <div className="mx-auto flex w-full max-w-layout items-center justify-between gap-6 px-4 py-5 sm:px-6">
         <button
+          type="button"
           onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#5c6664] transition hover:text-[#1f2937]"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
         >
           <ArrowLeft className="h-4 w-4" />
-          {t('guided.top.back')}
+          <T keyName="guided.top.back" />
         </button>
         <div className="flex items-center gap-3">
           <LanguageSwitch />
           <button
-            onClick={() => window.location.href = '/guided/history'}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
+            type="button"
+            onClick={() => navigate('/guided/history')}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
           >
-            {t('guided.top.viewHistory')}
+            <T keyName="guided.top.viewHistory" />
           </button>
         </div>
       </div>
     </header>
   );
 
-  // Initial load
-  useEffect(() => {
-    getWorkflows().then(setWorkflows).catch(console.error);
-  }, []);
-
-  // Fetch step details when session updates
-  useEffect(() => {
-    if (session && session.current_step_id && !session.is_complete) {
-      getStep(session.workflow_id, session.current_step_id)
-        .then(setCurrentStep)
-        .catch(console.error);
-    }
-  }, [session]);
-
   const handleStart = async (id: string) => {
     setIsLoading(true);
     try {
-      const newSession = await startSession(id);
+      const newSession = await startSessionMutation({ workflowId: id });
       setSession(newSession);
     } catch (e) {
       console.error(e);
@@ -197,7 +202,10 @@ const GuidedPage = () => {
     if (!session || !answer) return;
     setIsLoading(true);
     try {
-      const updatedSession = await submitAnswer(session.id, answer);
+      const updatedSession = await submitAnswerMutation({
+        sessionId: session.id,
+        answer,
+      });
       setSession(updatedSession);
       setAnswer('');
     } catch (e) {
@@ -207,36 +215,49 @@ const GuidedPage = () => {
     }
   };
 
-  // --- Views ---
-
-  // 1. Home: Workflow List
   if (!session) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-app-bg via-app-bg-soft to-app-bg-cool text-ink">
+        <div className="pointer-events-none absolute -left-52 -top-60 h-96 w-96 rounded-full bg-radial from-halo-peach/90 to-transparent opacity-70" />
+        <div className="pointer-events-none absolute -bottom-64 -right-56 h-96 w-96 rounded-full bg-radial from-halo-mint/80 to-transparent opacity-70" />
         <div className="relative z-10 min-h-screen">
           {topRow}
-          <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
+          <div className="mx-auto w-full max-w-layout px-4 py-10 sm:px-6">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-[#1f2937]">{t('guided.list.title')}</h1>
-              <p className="text-[#6b7280]">{t('guided.list.subtitle')}</p>
+              <h1 className="text-3xl font-bold text-ink">
+                <T keyName="guided.list.title" />
+              </h1>
+              <p className="text-subtle">
+                <T keyName="guided.list.subtitle" />
+              </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {workflows.map((wf) => (
-                <div
-                  key={wf.id}
-                  onClick={() => handleStart(wf.id)}
-                  className="group cursor-pointer rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-6 shadow-[0_14px_30px_rgba(31,41,55,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#a7b9b4]"
-                >
-                  <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-[#1f2937] group-hover:text-[#0f7a6a]">
-                    {getWorkflowTitle(wf)}
-                    <ChevronRight className="h-5 w-5 text-[#c0b4ac] group-hover:text-[#0f7a6a]" />
-                  </h3>
-                  <p className="text-sm text-[#5c6664]">{getWorkflowDescription(wf)}</p>
-                </div>
-              ))}
+              {workflows.map((workflow) => {
+                const workflowTitleKey = getWorkflowTitleKey(workflow.id);
+                const workflowDescriptionKey = getWorkflowDescriptionKey(workflow.id);
+
+                return (
+                  <button
+                    key={workflow.id}
+                    type="button"
+                    onClick={() => handleStart(workflow.id)}
+                    className="group cursor-pointer rounded-card border border-border/80 bg-surface p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-border-strong"
+                  >
+                    <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-ink group-hover:text-brand">
+                      {workflowTitleKey ? <T keyName={workflowTitleKey} /> : workflow.title}
+                      <ChevronRight className="h-5 w-5 text-border-strong group-hover:text-brand" />
+                    </h3>
+                    <p className="text-sm text-muted">
+                      {workflowDescriptionKey ? (
+                        <T keyName={workflowDescriptionKey} />
+                      ) : (
+                        workflow.description
+                      )}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -244,73 +265,68 @@ const GuidedPage = () => {
     );
   }
 
-  // 2. Dashboard: Completed Session
   if (session.is_complete) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-app-bg via-app-bg-soft to-app-bg-cool text-ink">
+        <div className="pointer-events-none absolute -left-52 -top-60 h-96 w-96 rounded-full bg-radial from-halo-peach/90 to-transparent opacity-70" />
+        <div className="pointer-events-none absolute -bottom-64 -right-56 h-96 w-96 rounded-full bg-radial from-halo-mint/80 to-transparent opacity-70" />
         <div className="relative z-10 min-h-screen">
           {topRow}
-          <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
-            <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
+          <div className="mx-auto w-full max-w-layout px-4 py-10 sm:px-6">
+            <div className="rounded-card border border-border/80 bg-surface p-8 shadow-card">
               <div className="mb-6 flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-[#2f9e7c]" />
-                <h1 className="text-2xl font-bold text-[#1f2937]">{t('guided.complete.title')}</h1>
+                <CheckCircle className="h-8 w-8 text-positive" />
+                <h1 className="text-2xl font-bold text-ink">
+                  <T keyName="guided.complete.title" />
+                </h1>
               </div>
 
               {session.warnings.length > 0 && (
-                <div className="mb-8 rounded-2xl border border-amber-100 bg-[#fff7ed] p-4">
+                <div className="mb-8 rounded-2xl border border-amber-100 bg-amber-50 p-4">
                   <h3 className="mb-3 flex items-center gap-2 font-semibold text-amber-800">
                     <AlertTriangle className="h-5 w-5" />
-                    {t('guided.complete.warnings')}
+                    <T keyName="guided.complete.warnings" />
                   </h3>
                   <ul className="space-y-2">
-                    {session.warnings.map((w, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-amber-900">
-                        <span>•</span> {translateWarning(w)}
+                    {session.warnings.map((warning) => (
+                      <li key={warning} className="flex gap-2 text-sm text-amber-900">
+                        <span>•</span> {renderWarning(warning)}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-[#1f2937]">
-                <Calendar className="h-5 w-5 text-[#0f7a6a]" />
-                {t('guided.complete.actionPlan')}
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-ink">
+                <Calendar className="h-5 w-5 text-brand" />
+                <T keyName="guided.complete.actionPlan" />
               </h3>
               <div className="space-y-4">
-                {session.tasks.map((task) => {
-                  const translatedTask = translateTask(task);
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-start gap-4 rounded-2xl border border-[#efe7e0] bg-white p-4 transition-colors"
-                    >
-                      <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-[#cbd5d1]" />
-                      <div>
-                        <h4 className="font-medium text-[#1f2937]">
-                          {translatedTask.title}
-                        </h4>
-                        <p className="mt-1 text-sm text-[#5c6664]">
-                          {translatedTask.description}
+                {session.tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-start gap-4 rounded-2xl border border-border bg-surface p-4 transition-colors"
+                  >
+                    <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-ring-track" />
+                    <div>
+                      <h4 className="font-medium text-ink">{renderTaskTitle(task)}</h4>
+                      <p className="mt-1 text-sm text-muted">{renderTaskDescription(task)}</p>
+                      {task.due_date && (
+                        <p className="mt-2 text-xs font-medium text-brand">
+                          <T keyName="guided.complete.due" params={{ date: task.due_date }} />
                         </p>
-                        {task.due_date && (
-                          <p className="mt-2 text-xs font-medium text-[#0f7a6a]">
-                            {t('guided.complete.due', { date: task.due_date })}
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
 
               <button
+                type="button"
                 onClick={() => setSession(null)}
-                className="mt-8 text-sm font-semibold text-[#5c6664] hover:text-[#1f2937]"
+                className="mt-8 text-sm font-semibold text-muted hover:text-ink"
               >
-                {t('guided.complete.startAnother')}
+                <T keyName="guided.complete.startAnother" />
               </button>
             </div>
           </div>
@@ -319,36 +335,41 @@ const GuidedPage = () => {
     );
   }
 
-  // 3. Wizard: Step View
   if (!currentStep) {
     return (
-      <div className="p-8 text-center text-[#9aa2a0]">{t('guided.step.loading')}</div>
+      <div className="p-8 text-center text-faint">
+        <T keyName="guided.step.loading" />
+      </div>
     );
   }
 
+  const stepTitleKey = getStepTitleKey(session.workflow_id, currentStep.id);
+  const stepQuestionKey = getStepQuestionKey(session.workflow_id, currentStep.id);
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-app-bg via-app-bg-soft to-app-bg-cool text-ink">
+      <div className="pointer-events-none absolute -left-52 -top-60 h-96 w-96 rounded-full bg-radial from-halo-peach/90 to-transparent opacity-70" />
+      <div className="pointer-events-none absolute -bottom-64 -right-56 h-96 w-96 rounded-full bg-radial from-halo-mint/80 to-transparent opacity-70" />
       <div className="relative z-10 min-h-screen">
         {topRow}
-        <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
-          <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
+        <div className="mx-auto w-full max-w-layout px-4 py-10 sm:px-6">
+          <div className="rounded-card border border-border/80 bg-surface p-8 shadow-card">
             <div className="mb-8">
               <button
+                type="button"
                 onClick={() => setSession(null)}
-                className="mb-4 text-xs text-[#9aa2a0] hover:text-[#5c6664]"
+                className="mb-4 text-xs text-faint hover:text-muted"
               >
-                {t('guided.step.cancel')}
+                <T keyName="guided.step.cancel" />
               </button>
-              <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-[#f1eee9]">
-                <div className="h-full w-1/3 animate-pulse rounded-full bg-[#0f7a6a]" />
+              <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-surface-cream">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-brand" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold text-[#1f2937]">
-                {getStepTitle(session.workflow_id, currentStep.id, currentStep.title)}
+              <h2 className="mb-2 text-2xl font-bold text-ink">
+                {stepTitleKey ? <T keyName={stepTitleKey} /> : currentStep.title}
               </h2>
-              <p className="text-lg text-[#5c6664]">
-                {getStepQuestion(session.workflow_id, currentStep.id, currentStep.question)}
+              <p className="text-lg text-muted">
+                {stepQuestionKey ? <T keyName={stepQuestionKey} /> : currentStep.question}
               </p>
             </div>
 
@@ -358,9 +379,8 @@ const GuidedPage = () => {
                   type="text"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  className="w-full rounded-2xl border border-[#e5ded8] bg-white px-4 py-3 outline-none focus:border-[#0f7a6a] focus:ring-2 focus:ring-[#0f7a6a]/15"
+                  className="w-full rounded-2xl border border-border bg-surface px-4 py-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
                   placeholder={t('guided.step.placeholder')}
-                  autoFocus
                 />
               )}
 
@@ -369,41 +389,49 @@ const GuidedPage = () => {
                   type="date"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  className="w-full rounded-2xl border border-[#e5ded8] bg-white px-4 py-3 outline-none focus:border-[#0f7a6a] focus:ring-2 focus:ring-[#0f7a6a]/15"
-                  autoFocus
+                  className="w-full rounded-2xl border border-border bg-surface px-4 py-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
                 />
               )}
 
               {currentStep.type === 'radio' && currentStep.options && (
                 <div className="grid gap-3">
-                  {currentStep.options.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => {
-                        setAnswer(opt);
-                      }}
-                      className={`rounded-2xl border px-4 py-3 text-left transition-all ${
-                        answer === opt
-                          ? 'border-[#0f7a6a] bg-[#e8f3f0] text-[#0f7a6a] ring-1 ring-[#0f7a6a]/30'
-                          : 'border-[#e5ded8] hover:border-[#a7b9b4] hover:bg-white/70'
-                      }`}
-                    >
-                      {getOptionLabel(session.workflow_id, currentStep.id, opt)}
-                    </button>
-                  ))}
+                  {currentStep.options.map((option) => {
+                    const optionLabelKey = getOptionLabelKey(
+                      session.workflow_id,
+                      currentStep.id,
+                      option,
+                    );
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          setAnswer(option);
+                        }}
+                        className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                          answer === option
+                            ? 'border-brand bg-brand-soft text-brand ring-1 ring-brand/30'
+                            : 'border-border hover:border-border-strong hover:bg-surface/70'
+                        }`}
+                      >
+                        {optionLabelKey ? <T keyName={optionLabelKey} /> : option}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
               <button
+                type="button"
                 onClick={handleAnswer}
                 disabled={!answer || isLoading}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0f7a6a] py-4 font-semibold text-white transition-all hover:bg-[#0b6b5e] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 font-semibold text-white transition-all hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? (
-                  t('guided.step.processing')
+                  <T keyName="guided.step.processing" />
                 ) : (
                   <>
-                    {t('guided.step.next')} <ArrowRight className="h-4 w-4" />
+                    <T keyName="guided.step.next" /> <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>

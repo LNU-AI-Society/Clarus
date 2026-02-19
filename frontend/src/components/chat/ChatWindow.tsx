@@ -1,4 +1,4 @@
-import { Message } from '../../types';
+import { Message } from './types';
 import ChatMessage from './ChatMessage';
 import React, { useEffect, useRef } from 'react';
 
@@ -18,8 +18,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (messages.length === 0 && !isLoading) {
+      return;
+    }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [isLoading, messages.length]);
 
   return (
     <div
@@ -37,7 +40,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         }
       >
         {messages.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-end pb-8 text-[#9aa2a0] select-none" />
+          <div className="flex flex-1 select-none flex-col items-center justify-end pb-8 text-faint" />
         ) : (
           messages.map((msg) => (
             <ChatMessage key={msg.id} message={msg} onQuestionClick={onQuestionClick} />
@@ -45,19 +48,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         )}
 
         {isLoading && (
-          <div className="flex animate-pulse items-center gap-2 p-4 text-[#9aa2a0]">
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-[#0f7a6a]"
-              style={{ animationDelay: '0ms' }}
-            />
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-[#0f7a6a]"
-              style={{ animationDelay: '150ms' }}
-            />
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-[#0f7a6a]"
-              style={{ animationDelay: '300ms' }}
-            />
+          <div className="flex animate-pulse items-center gap-2 p-4 text-faint">
+            <div className="h-2 w-2 animate-bounce rounded-full bg-brand" />
+            <div className="h-2 w-2 animate-bounce rounded-full bg-brand animate-delay-150" />
+            <div className="h-2 w-2 animate-bounce rounded-full bg-brand animate-delay-300" />
           </div>
         )}
         <div ref={bottomRef} />
