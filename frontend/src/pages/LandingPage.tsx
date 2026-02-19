@@ -5,13 +5,15 @@ import {
   SignOutButton,
   SignUpButton,
 } from '@clerk/clerk-react';
+import { useTranslate } from '@tolgee/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LanguageSwitch from '../components/LanguageSwitch';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const fullIntroText =
-    'Chat, guided workflows, and document analysis tailored to Swedish law - built for HR teams and individuals.';
+  const { t } = useTranslate();
+  const fullIntroText = t('landing.hero.intro');
   const [typedIntroText, setTypedIntroText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
@@ -58,17 +60,18 @@ const LandingPage = () => {
         <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-[18px] py-5 sm:px-6">
           <div className="font-['Sora'] text-[20px] font-bold text-[#1f2937]">Clarus</div>
           <div className="flex items-center gap-3">
+            <LanguageSwitch />
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]">
-                  Sign in
+                  {t('landing.auth.signIn')}
                 </button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <SignOutButton>
                 <button className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
-                  Sign out
+                  {t('landing.auth.signOut')}
                 </button>
               </SignOutButton>
             </SignedIn>
@@ -80,11 +83,11 @@ const LandingPage = () => {
           <section className="flex-1 space-y-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#e8f3f0] px-3.5 py-1.5 text-xs font-semibold text-[#0f7a6a]">
               <span className="h-2 w-2 rounded-full bg-[#0f7a6a]" />
-              AI legal assistant
+              {t('landing.badge')}
             </div>
             <div className="space-y-4">
               <h1 className="font-['Sora'] text-[clamp(2.2rem,3.2vw,3.4rem)] leading-[1.1] text-[#1f2937]">
-                Clear answers for Swedish employment &amp; immigration.
+                {t('landing.hero.title')}
               </h1>
               <p className="max-w-[32rem] text-base leading-[1.6] text-[#4b5563]">
                 {typedIntroText}
@@ -100,12 +103,12 @@ const LandingPage = () => {
               <SignedOut>
                 <SignUpButton mode="modal">
                   <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]">
-                    Start free
+                    {t('landing.cta.startFree')}
                   </button>
                 </SignUpButton>
                 <SignInButton mode="modal">
                   <button className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-[22px] py-3 font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
-                    View demo
+                    {t('landing.cta.viewDemo')}
                   </button>
                 </SignInButton>
               </SignedOut>
@@ -114,24 +117,24 @@ const LandingPage = () => {
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-[22px] py-3 font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]"
                   onClick={() => navigate('/chat')}
                 >
-                  Open chat
+                  {t('landing.cta.openChat')}
                 </button>
                 <button
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-[22px] py-3 font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
                   onClick={() => navigate('/guided')}
                 >
-                  Explore workflows
+                  {t('landing.cta.exploreWorkflows')}
                 </button>
               </SignedIn>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-[rgba(229,222,216,0.7)] bg-white/90 px-4 py-3.5 shadow-[0_12px_24px_rgba(31,41,55,0.08)]">
                 <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">98%</div>
-                <div className="text-xs text-[#6b7280]">case clarity</div>
+                <div className="text-xs text-[#6b7280]">{t('landing.stats.caseClarityLabel')}</div>
               </div>
               <div className="rounded-2xl border border-[rgba(229,222,216,0.7)] bg-white/90 px-4 py-3.5 shadow-[0_12px_24px_rgba(31,41,55,0.08)]">
                 <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">24/7</div>
-                <div className="text-xs text-[#6b7280]">instant replies</div>
+                <div className="text-xs text-[#6b7280]">{t('landing.stats.instantRepliesLabel')}</div>
               </div>
             </div>
           </section>
@@ -140,32 +143,36 @@ const LandingPage = () => {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <div className="font-['Sora'] text-[18px] font-bold text-[#1f2937]">
-                    Case summary
+                    {t('landing.caseSummary.title')}
                   </div>
-                  <div className="text-[12px] text-[#7c8784]">Employment contract review</div>
+                  <div className="text-[12px] text-[#7c8784]">
+                    {t('landing.caseSummary.subtitle')}
+                  </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f7f4] px-2.5 py-1 text-[11px] font-semibold text-[#2f9e7c]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#2f9e7c]" />
-                  Live
+                  {t('landing.caseSummary.live')}
                 </div>
               </div>
               <div className="mb-4 rounded-2xl bg-[#f8f3ee] p-4 sm:rounded-[18px]">
-                <div className="mb-2 text-[12px] font-bold text-[#8b6b5f]">Key findings</div>
+                <div className="mb-2 text-[12px] font-bold text-[#8b6b5f]">
+                  {t('landing.caseSummary.keyFindings')}
+                </div>
                 <ul className="list-disc pl-[18px] text-[13px] leading-[1.5] text-[#4b3d36]">
-                  <li>Probation clause not enforceable</li>
-                  <li>Notice period: 1 month</li>
-                  <li>Work permit valid until 2027</li>
+                  <li>{t('landing.caseSummary.finding1')}</li>
+                  <li>{t('landing.caseSummary.finding2')}</li>
+                  <li>{t('landing.caseSummary.finding3')}</li>
                 </ul>
               </div>
               <div className="mb-4 grid gap-2.5">
                 <div className="flex justify-end">
                   <div className="max-w-[260px] rounded-2xl bg-[#0f7a6a] px-3.5 py-2.5 text-[13px] leading-[1.4] text-white">
-                    Can I terminate during probation?
+                    {t('landing.caseSummary.question')}
                   </div>
                 </div>
                 <div className="flex">
                   <div className="max-w-[260px] rounded-2xl bg-[#f1f5f4] px-3.5 py-2.5 text-[13px] leading-[1.4] text-[#2c3b3a]">
-                    Yes, if the contract allows it and you give notice in writing.
+                    {t('landing.caseSummary.answer')}
                   </div>
                 </div>
               </div>
@@ -175,8 +182,10 @@ const LandingPage = () => {
                   <span className="relative z-10">60%</span>
                 </div>
                 <div className="flex flex-col gap-0.5 text-[12px] font-bold text-[#1f2937]">
-                  <div>Guided checklist</div>
-                  <span className="font-medium text-[#6b7280]">3 of 5 steps completed</span>
+                  <div>{t('landing.caseSummary.guidedChecklistTitle')}</div>
+                  <span className="font-medium text-[#6b7280]">
+                    {t('landing.caseSummary.guidedChecklistSubtitle')}
+                  </span>
                 </div>
               </div>
             </div>

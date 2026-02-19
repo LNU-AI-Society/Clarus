@@ -1,6 +1,7 @@
 import { Message } from '../../types';
 import AnalysisView from './AnalysisView';
 import { User, Bot } from 'lucide-react';
+import { useTranslate } from '@tolgee/react';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -12,6 +13,7 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) => {
   const isUser = message.role === 'user';
+  const { t } = useTranslate();
 
   return (
     <div className={`mb-4 flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -47,7 +49,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) =
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   a: ({ href, children, ...props }) => (
-                    <a href={href} target="_blank" rel="noreferrer" {...props}>
+                    <a href={href} target="_blank" rel="noreferrer" {...props}>wh
                       {children}
                     </a>
                   ),
@@ -66,7 +68,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) =
           {/* Citations */}
           {message.citations && message.citations.length > 0 && (
             <div className="mt-4 border-t border-[#e5ded8] pt-3">
-              <p className="mb-2 text-xs font-semibold opacity-70">Sources:</p>
+              <p className="mb-2 text-xs font-semibold opacity-70">{t('chatMessage.sources')}</p>
               <div className="space-y-1">
                 {message.citations.map((doc, idx) => (
                   <a
