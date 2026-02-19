@@ -22,6 +22,128 @@ const GuidedPage = () => {
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const workflowCopy: Record<string, { title: string; description: string }> = {
+    renewal: {
+      title: t('guided.workflows.renewal.title'),
+      description: t('guided.workflows.renewal.description'),
+    },
+    change_employer: {
+      title: t('guided.workflows.change_employer.title'),
+      description: t('guided.workflows.change_employer.description'),
+    },
+  };
+
+  const stepCopy: Record<string, Record<string, { title: string; question: string }>> = {
+    renewal: {
+      expiry_date: {
+        title: t('guided.steps.renewal.expiry_date.title'),
+        question: t('guided.steps.renewal.expiry_date.question'),
+      },
+      employment_status: {
+        title: t('guided.steps.renewal.employment_status.title'),
+        question: t('guided.steps.renewal.employment_status.question'),
+      },
+      supporting_docs: {
+        title: t('guided.steps.renewal.supporting_docs.title'),
+        question: t('guided.steps.renewal.supporting_docs.question'),
+      },
+    },
+    change_employer: {
+      permit_duration: {
+        title: t('guided.steps.change_employer.permit_duration.title'),
+        question: t('guided.steps.change_employer.permit_duration.question'),
+      },
+      new_role: {
+        title: t('guided.steps.change_employer.new_role.title'),
+        question: t('guided.steps.change_employer.new_role.question'),
+      },
+    },
+  };
+
+  const optionCopy: Record<string, Record<string, Record<string, string>>> = {
+    renewal: {
+      employment_status: {
+        'Yes, same employer': t('guided.steps.renewal.employment_status.options.same'),
+        'No, switching employers': t('guided.steps.renewal.employment_status.options.switch'),
+      },
+    },
+    change_employer: {
+      permit_duration: {
+        'Less than 24 months': t('guided.steps.change_employer.permit_duration.options.less'),
+        '24 months or more': t('guided.steps.change_employer.permit_duration.options.more'),
+      },
+    },
+  };
+
+  const taskCopy: Record<
+    string,
+    { titleKey: string; descriptionKey: string; requiresDate?: boolean }
+  > = {
+    't-renewal-1': {
+      titleKey: 'guided.tasks.renewal.prepare.title',
+      descriptionKey: 'guided.tasks.renewal.prepare.description',
+      requiresDate: true,
+    },
+    't-change-1': {
+      titleKey: 'guided.tasks.change_employer.new_application.title',
+      descriptionKey: 'guided.tasks.change_employer.new_application.description',
+    },
+    't-change-2': {
+      titleKey: 'guided.tasks.change_employer.role_alignment.title',
+      descriptionKey: 'guided.tasks.change_employer.role_alignment.description',
+    },
+    't-general-1': {
+      titleKey: 'guided.tasks.general.review.title',
+      descriptionKey: 'guided.tasks.general.review.description',
+    },
+  };
+
+  const warningCopy: Record<string, string> = {
+    'Switching employers may require a new permit application.':
+      'guided.warnings.renewal.switch_employer',
+    'Changing employers within 24 months requires a new application.':
+      'guided.warnings.change_employer.within_24_months',
+  };
+
+  const getWorkflowTitle = (workflow: WorkflowMetadata) =>
+    workflowCopy[workflow.id]?.title ?? workflow.title;
+
+  const getWorkflowDescription = (workflow: WorkflowMetadata) =>
+    workflowCopy[workflow.id]?.description ?? workflow.description;
+
+  const getStepTitle = (workflowId: string, stepId: string, fallback: string) =>
+    stepCopy[workflowId]?.[stepId]?.title ?? fallback;
+
+  const getStepQuestion = (workflowId: string, stepId: string, fallback: string) =>
+    stepCopy[workflowId]?.[stepId]?.question ?? fallback;
+
+  const getOptionLabel = (workflowId: string, stepId: string, option: string) =>
+    optionCopy[workflowId]?.[stepId]?.[option] ?? option;
+
+  const translateTask = (task: { id: string; title: string; description: string; due_date?: string }) => {
+    const config = taskCopy[task.id];
+    if (!config) {
+      return task;
+    }
+
+    const description = config.requiresDate
+      ? task.due_date
+        ? t(config.descriptionKey, { date: task.due_date })
+        : task.description
+      : t(config.descriptionKey);
+
+    return {
+      ...task,
+      title: t(config.titleKey),
+      description,
+    };
+  };
+
+  const translateWarning = (warning: string) => {
+    const key = warningCopy[warning];
+    return key ? t(key) : warning;
+  };
+
   const topRow = (
     <header className="relative z-20">
       <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-[18px] py-5 sm:px-6">
@@ -109,10 +231,10 @@ const GuidedPage = () => {
                   className="group cursor-pointer rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-6 shadow-[0_14px_30px_rgba(31,41,55,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#a7b9b4]"
                 >
                   <h3 className="mb-2 flex items-center justify-between text-lg font-semibold text-[#1f2937] group-hover:text-[#0f7a6a]">
-                    {wf.title}
+                    {getWorkflowTitle(wf)}
                     <ChevronRight className="h-5 w-5 text-[#c0b4ac] group-hover:text-[#0f7a6a]" />
                   </h3>
-                  <p className="text-sm text-[#5c6664]">{wf.description}</p>
+                  <p className="text-sm text-[#5c6664]">{getWorkflowDescription(wf)}</p>
                 </div>
               ))}
             </div>
@@ -146,7 +268,7 @@ const GuidedPage = () => {
                   <ul className="space-y-2">
                     {session.warnings.map((w, i) => (
                       <li key={i} className="flex gap-2 text-sm text-amber-900">
-                        <span>•</span> {w}
+                        <span>•</span> {translateWarning(w)}
                       </li>
                     ))}
                   </ul>
@@ -158,23 +280,30 @@ const GuidedPage = () => {
                 {t('guided.complete.actionPlan')}
               </h3>
               <div className="space-y-4">
-                {session.tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-start gap-4 rounded-2xl border border-[#efe7e0] bg-white p-4 transition-colors"
-                  >
-                    <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-[#cbd5d1]" />
-                    <div>
-                      <h4 className="font-medium text-[#1f2937]">{task.title}</h4>
-                      <p className="mt-1 text-sm text-[#5c6664]">{task.description}</p>
-                      {task.due_date && (
-                        <p className="mt-2 text-xs font-medium text-[#0f7a6a]">
-                          {t('guided.complete.due', { date: task.due_date })}
+                {session.tasks.map((task) => {
+                  const translatedTask = translateTask(task);
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-start gap-4 rounded-2xl border border-[#efe7e0] bg-white p-4 transition-colors"
+                    >
+                      <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-[#cbd5d1]" />
+                      <div>
+                        <h4 className="font-medium text-[#1f2937]">
+                          {translatedTask.title}
+                        </h4>
+                        <p className="mt-1 text-sm text-[#5c6664]">
+                          {translatedTask.description}
                         </p>
-                      )}
+                        {task.due_date && (
+                          <p className="mt-2 text-xs font-medium text-[#0f7a6a]">
+                            {t('guided.complete.due', { date: task.due_date })}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <button
@@ -215,8 +344,12 @@ const GuidedPage = () => {
               <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-[#f1eee9]">
                 <div className="h-full w-1/3 animate-pulse rounded-full bg-[#0f7a6a]" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold text-[#1f2937]">{currentStep.title}</h2>
-              <p className="text-lg text-[#5c6664]">{currentStep.question}</p>
+              <h2 className="mb-2 text-2xl font-bold text-[#1f2937]">
+                {getStepTitle(session.workflow_id, currentStep.id, currentStep.title)}
+              </h2>
+              <p className="text-lg text-[#5c6664]">
+                {getStepQuestion(session.workflow_id, currentStep.id, currentStep.question)}
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -255,7 +388,7 @@ const GuidedPage = () => {
                           : 'border-[#e5ded8] hover:border-[#a7b9b4] hover:bg-white/70'
                       }`}
                     >
-                      {opt}
+                      {getOptionLabel(session.workflow_id, currentStep.id, opt)}
                     </button>
                   ))}
                 </div>

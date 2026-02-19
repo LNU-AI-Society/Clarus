@@ -26,7 +26,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       className={
         isEmpty
           ? 'w-full space-y-6 px-4 pb-6 md:px-8'
-          : 'flex-1 space-y-6 overflow-y-auto px-4 pb-6 pt-16 md:px-8'
+          : 'flex-1 space-y-6 px-4 pb-6 md:px-8'
       }
     >
       <div
