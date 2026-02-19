@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Navbar from '../components/Navbar';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
@@ -5,7 +6,16 @@ import FileUploadArea from '../components/chat/FileUploadArea';
 import { analyzeDocument, streamChat } from '../services/api';
 import { Message } from '../types';
 import { Lightbulb } from 'lucide-react';
+=======
+import LanguageSwitch from '../components/LanguageSwitch';
+import ChatInput from '../components/chat/ChatInput';
+import ChatWindow from '../components/chat/ChatWindow';
+import FileUploadArea from '../components/chat/FileUploadArea';
+import { analyzeDocument, sendMessage } from '../services/api';
+import { Message } from '../types';
+>>>>>>> origin/main
 import { useTranslate } from '@tolgee/react';
+import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const ChatPage = () => {
@@ -33,14 +43,7 @@ const ChatPage = () => {
       text: text.trim(),
     };
 
-    const botMsgId = (Date.now() + 1).toString();
-    const botMsg: Message = {
-      id: botMsgId,
-      role: 'model',
-      text: '',
-    };
-
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setUserInput('');
     setIsLoading(true);
 
@@ -48,52 +51,25 @@ const ChatPage = () => {
       const history = messages
         .filter((m) => !m.isError)
         .map((m) => ({ role: m.role, content: m.text }));
-      let hasStreamingStarted = false;
+      const response = await sendMessage(userMsg.text, history);
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: response.answer?.trim() || t('chat.errors.noResponse'),
+        citations: response.citations,
+      };
 
-      await streamChat(userMsg.text, history, (chunk) => {
-        if (!hasStreamingStarted) {
-          hasStreamingStarted = true;
-          setIsLoading(false);
-        }
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMsgId
-              ? {
-                  ...msg,
-                  text: msg.text + chunk,
-                }
-              : msg,
-          ),
-        );
-      });
-
-      if (!hasStreamingStarted) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-                msg.id === botMsgId
-                  ? {
-                      ...msg,
-                      text: t('chat.errors.noResponse'),
-                      isError: true,
-                    }
-                  : msg,
-              ),
-        );
-      }
+      setMessages((prev) => [...prev, botMsg]);
     } catch (error) {
       console.error(error);
-      setMessages((prev) =>
-        prev.map((msg) =>
-              msg.id === botMsgId
-                ? {
-                    ...msg,
-                    text: t('chat.errors.generic'),
-                    isError: true,
-                  }
-                : msg,
-            ),
-      );
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: t('chat.errors.generic'),
+        isError: true,
+      };
+
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -163,8 +139,23 @@ const ChatPage = () => {
         <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
+<<<<<<< HEAD
         <Navbar backTo="/" backAriaLabel={t('chat.backToHomeAria')} />
         <main className="flex flex-1 flex-col pt-6" style={{ paddingBottom: footerPadding }}>
+=======
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="fixed top-4 left-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a] sm:top-6 sm:left-6"
+          aria-label={t('chat.backToHomeAria')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="fixed top-4 right-4 z-30 sm:top-6 sm:right-6">
+          <LanguageSwitch />
+        </div>
+        <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
+>>>>>>> origin/main
           {isEmpty ? (
             <div className="flex flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">
