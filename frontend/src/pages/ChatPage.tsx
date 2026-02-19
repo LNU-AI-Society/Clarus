@@ -1,22 +1,14 @@
-<<<<<<< HEAD
-import Navbar from '../components/Navbar';
-import ChatInput from '../components/chat/ChatInput';
-import ChatWindow from '../components/chat/ChatWindow';
-import FileUploadArea from '../components/chat/FileUploadArea';
-import { analyzeDocument, streamChat } from '../services/api';
-import { Message } from '../types';
-import { Lightbulb } from 'lucide-react';
-=======
 import LanguageSwitch from '../components/LanguageSwitch';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
 import { analyzeDocument, sendMessage } from '../services/api';
 import { Message } from '../types';
->>>>>>> origin/main
 import { useTranslate } from '@tolgee/react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 const ChatPage = () => {
   const { t } = useTranslate();
