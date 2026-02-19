@@ -1,7 +1,8 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { api } from '../lib/convexApi';
+import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
-import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
 import {
   AlertTriangle,
@@ -33,7 +34,7 @@ const formatWorkflowTitle = (workflowId: string) => {
 const GuidedHistoryPage = () => {
   const navigate = useNavigate();
   const sessionsQuery = useQuery(api.guided.getHistory);
-  const sessions = sessionsQuery ?? [];
+  const sessions = (sessionsQuery ?? []) as GuidedSession[];
   const isLoading = sessionsQuery === undefined;
 
   return (

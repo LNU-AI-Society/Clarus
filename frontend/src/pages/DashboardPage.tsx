@@ -1,14 +1,15 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { api } from '../lib/convexApi';
+import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
-import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
 import { FileText, CheckCircle, Clock } from 'lucide-react';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const historyQuery = useQuery(api.guided.getHistory);
-  const history = historyQuery ?? [];
+  const history = (historyQuery ?? []) as GuidedSession[];
   const isLoading = historyQuery === undefined;
 
   return (

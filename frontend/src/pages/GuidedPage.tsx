@@ -1,9 +1,14 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import { api } from '../lib/convexApi';
+import type {
+  GuidedSession,
+  GuidedTask,
+  GuidedWorkflowMetadata,
+  GuidedWorkflowStep,
+} from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
 import { T, useTranslate } from '@tolgee/react';
-import { api } from '../../convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
-import type { FunctionReturnType } from 'convex/server';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -97,17 +102,13 @@ const warningCopy: Record<string, string> = {
     'guided.warnings.change_employer.within_24_months',
 };
 
-type WorkflowMetadata = FunctionReturnType<typeof api.guided.listWorkflows>[number];
-type GuidedStep = FunctionReturnType<typeof api.guided.getWorkflowStep>;
-type GuidedSession = FunctionReturnType<typeof api.guided.getSession>;
-
 const GuidedPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslate();
   const [session, setSession] = useState<GuidedSession | null>(null);
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const workflows = (useQuery(api.guided.listWorkflows) ?? []) as WorkflowMetadata[];
+  const workflows = (useQuery(api.guided.listWorkflows) ?? []) as GuidedWorkflowMetadata[];
   const currentStep = useQuery(
     api.guided.getWorkflowStep,
     session && session.current_step_id && !session.is_complete
@@ -116,7 +117,7 @@ const GuidedPage = () => {
           stepId: session.current_step_id,
         }
       : 'skip',
-  ) as GuidedStep | undefined;
+  ) as GuidedWorkflowStep | undefined;
   const startSessionMutation = useMutation(api.guided.startSession);
   const submitAnswerMutation = useMutation(api.guided.submitAnswer);
 
@@ -134,12 +135,12 @@ const GuidedPage = () => {
   const getOptionLabelKey = (workflowId: string, stepId: string, option: string) =>
     optionCopy[workflowId]?.[stepId]?.[option];
 
-  const renderTaskTitle = (task: GuidedSession['tasks'][number]) => {
+  const renderTaskTitle = (task: GuidedTask) => {
     const config = taskCopy[task.id];
     return config ? <T keyName={config.titleKey} /> : task.title;
   };
 
-  const renderTaskDescription = (task: GuidedSession['tasks'][number]) => {
+  const renderTaskDescription = (task: GuidedTask) => {
     const config = taskCopy[task.id];
     if (!config) {
       return task.description;
@@ -189,7 +190,7 @@ const GuidedPage = () => {
   const handleStart = async (id: string) => {
     setIsLoading(true);
     try {
-      const newSession = await startSessionMutation({ workflowId: id });
+      const newSession = (await startSessionMutation({ workflowId: id })) as GuidedSession;
       setSession(newSession);
     } catch (e) {
       console.error(e);
@@ -202,10 +203,10 @@ const GuidedPage = () => {
     if (!session || !answer) return;
     setIsLoading(true);
     try {
-      const updatedSession = await submitAnswerMutation({
+      const updatedSession = (await submitAnswerMutation({
         sessionId: session.id,
         answer,
-      });
+      })) as GuidedSession;
       setSession(updatedSession);
       setAnswer('');
     } catch (e) {

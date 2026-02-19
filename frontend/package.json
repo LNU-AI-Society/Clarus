@@ -8,6 +8,7 @@
     "dev:convex": "convex dev",
     "generate-routes": "tsr generate",
     "watch-routes": "tsr watch",
+    "typecheck": "npm run generate-routes && tsc --noEmit",
     "build": "npm run generate-routes && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
