@@ -49,7 +49,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onQuestionClick }) =
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   a: ({ href, children, ...props }) => (
-                    <a href={href} target="_blank" rel="noreferrer" {...props}>wh
+                    <a href={href} target="_blank" rel="noreferrer" {...props}>
                       {children}
                     </a>
                   ),

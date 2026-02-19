@@ -52,18 +52,24 @@ export const createRagSearchTool = (
 ) =>
   tool({
     description: 'Search Swedish legal sources. Input must be Swedish.',
-    parameters: z.object({
-      query_sv: z.string().min(1).describe('Swedish search query'),
+    inputSchema: z.object({
+      query_sv: z.string().optional().describe('Swedish search query'),
+      query: z.string().optional().describe('Fallback query key for compatibility'),
       site_id: z.string().optional().describe('Override site id'),
       limit: z.number().int().positive().optional().describe('Max results'),
     }),
-    execute: async ({ query_sv, site_id, limit }) => {
+    execute: async ({ query_sv, query, site_id, limit }) => {
+      const resolvedQuery = (query_sv?.trim() || query?.trim() || '').trim();
+      if (!resolvedQuery) {
+        return emptyRagResult();
+      }
+
       const resolvedSiteId = site_id ?? options?.siteId;
       const resolvedLimit = limit ?? options?.limit;
 
       try {
         const primary = await searchRagChunks(ctx, {
-          query: query_sv,
+          query: resolvedQuery,
           site_id: resolvedSiteId,
           lang: 'sv',
           limit: resolvedLimit,
@@ -74,7 +80,7 @@ export const createRagSearchTool = (
         }
 
         return await searchRagChunks(ctx, {
-          query: query_sv,
+          query: resolvedQuery,
           site_id: resolvedSiteId,
           limit: resolvedLimit,
         });
