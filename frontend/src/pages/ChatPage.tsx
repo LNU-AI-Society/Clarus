@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ChatPage = () => {
   const { t } = useTranslate();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -131,10 +132,6 @@ const ChatPage = () => {
         <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
-<<<<<<< HEAD
-        <Navbar backTo="/" backAriaLabel={t('chat.backToHomeAria')} />
-        <main className="flex flex-1 flex-col pt-6" style={{ paddingBottom: footerPadding }}>
-=======
         <button
           type="button"
           onClick={() => navigate('/')}
@@ -147,7 +144,7 @@ const ChatPage = () => {
           <LanguageSwitch />
         </div>
         <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
->>>>>>> origin/main
+
           {isEmpty ? (
             <div className="flex flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">
