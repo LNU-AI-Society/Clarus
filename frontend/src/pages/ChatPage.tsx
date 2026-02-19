@@ -2,9 +2,10 @@ import LanguageSwitch from '../components/LanguageSwitch';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
-import { analyzeDocument, sendMessage } from '../services/api';
-import { Message } from '../types';
-import { useTranslate } from '@tolgee/react';
+import { Message } from '../components/chat/types';
+import { T, useTranslate } from '@tolgee/react';
+import { api } from '../../convex/_generated/api';
+import { useAction } from 'convex/react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,14 +19,16 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [footerHeight, setFooterHeight] = useState(0);
   const footerRef = useRef<HTMLDivElement | null>(null);
+  const sendMessage = useAction(api.chat.sendMessage);
+  const analyzeDocument = useAction(api.documents.analyzeDocument);
   const isEmpty = messages.length === 0;
-  const suggestedQuestions = [
-    t('chat.suggested.q1'),
-    t('chat.suggested.q2'),
-    t('chat.suggested.q3'),
-    t('chat.suggested.q4'),
-    t('chat.suggested.q5'),
-  ];
+  const suggestedQuestionKeys = [
+    'chat.suggested.q1',
+    'chat.suggested.q2',
+    'chat.suggested.q3',
+    'chat.suggested.q4',
+    'chat.suggested.q5',
+  ] as const;
 
   const handleSend = async (text: string = userInput) => {
     if (!text.trim() || isLoading) return;
@@ -44,7 +47,10 @@ const ChatPage = () => {
       const history = messages
         .filter((m) => !m.isError)
         .map((m) => ({ role: m.role, content: m.text }));
-      const response = await sendMessage(userMsg.text, history);
+      const response = await sendMessage({
+        message: userMsg.text,
+        history,
+      });
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
@@ -79,7 +85,11 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, uploadMsg]);
 
     try {
-      const result = await analyzeDocument(file);
+      const result = await analyzeDocument({
+        filename: file.name,
+        fileType: file.type || undefined,
+        size: file.size,
+      });
 
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -100,6 +110,10 @@ const ChatPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSuggestedQuestion = (keyName: (typeof suggestedQuestionKeys)[number]) => {
+    void handleSend(t(keyName));
   };
 
   useEffect(() => {
@@ -123,20 +137,20 @@ const ChatPage = () => {
 
   const footerPadding = footerHeight
     ? `calc(${footerHeight}px + env(safe-area-inset-bottom))`
-    : 'calc(240px + env(safe-area-inset-bottom))';
+    : 'calc(var(--chat-footer-fallback-height) + env(safe-area-inset-bottom))';
 
   return (
-    <div className="relative min-h-screen text-[#1f2937]">
-      <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+    <div className="text-ink relative min-h-screen">
+      <div className="from-app-bg via-app-bg-soft to-app-bg-cool fixed inset-0 z-0 bg-linear-to-br">
+        <div className="from-halo-peach/90 pointer-events-none absolute -top-60 -left-52 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
+        <div className="from-halo-mint/80 pointer-events-none absolute -right-56 -bottom-64 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="fixed top-4 left-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a] sm:top-6 sm:left-6"
-          aria-label={t('chat.backToHomeAria')}
+          className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand fixed top-4 left-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px sm:top-6 sm:left-6"
+          aria-label="Back to home"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -156,18 +170,21 @@ const ChatPage = () => {
                 />
               </div>
               <div className="mx-auto w-full max-w-5xl px-4 pb-6">
-                <div className="mb-3 flex items-center gap-2 text-[#54605e]">
-                  <Lightbulb className="h-5 w-5 text-[#0f7a6a]" />
-                  <h3 className="text-sm font-semibold">{t('chat.suggested.title')}</h3>
+                <div className="text-chat-hint mb-3 flex items-center gap-2">
+                  <Lightbulb className="text-brand h-5 w-5" />
+                  <h3 className="text-sm font-semibold">
+                    <T keyName="chat.suggested.title" />
+                  </h3>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {suggestedQuestions.map((q, i) => (
+                  {suggestedQuestionKeys.map((keyName) => (
                     <button
-                      key={i}
-                      onClick={() => handleSend(q)}
-                      className="rounded-2xl border border-[#e5ded8] bg-white/90 p-4 text-left text-sm text-[#334155] shadow-sm transition-all hover:border-[#0f7a6a] hover:text-[#0f7a6a] hover:shadow-md"
+                      type="button"
+                      key={keyName}
+                      onClick={() => handleSuggestedQuestion(keyName)}
+                      className="border-border bg-surface/90 text-chat-soft hover:border-brand hover:text-brand rounded-2xl border p-4 text-left text-sm shadow-sm transition-all hover:shadow-md"
                     >
-                      {q}
+                      <T keyName={keyName} />
                     </button>
                   ))}
                 </div>
@@ -182,7 +199,7 @@ const ChatPage = () => {
             />
           )}
         </main>
-        <div ref={footerRef} className="fixed bottom-0 left-0 right-0 z-20">
+        <div ref={footerRef} className="fixed right-0 bottom-0 left-0 z-20">
           <div className="mx-auto w-full max-w-5xl px-4 pb-2">
             <FileUploadArea
               onFileSelect={handleFileSelect}

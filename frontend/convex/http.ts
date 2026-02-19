@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText } from 'ai';
+import { stepCountIs, streamText } from 'ai';
 import { httpRouter } from 'convex/server';
 
 import { httpAction } from './_generated/server';
@@ -18,7 +18,7 @@ const corsHeaders = (origin: string) => {
   const headers = new Headers();
   headers.set('Access-Control-Allow-Origin', origin);
   headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Max-Age', '86400');
   headers.set('Vary', 'Origin');
   return headers;
@@ -29,7 +29,7 @@ const http = httpRouter();
 http.route({
   path: '/chat/stream',
   method: 'OPTIONS',
-  handler: httpAction(async (ctx, request) => {
+  handler: httpAction(async (_ctx, request) => {
     const origin = request.headers.get('Origin') ?? env.CLIENT_ORIGIN ?? DEFAULT_ORIGIN;
     return new Response(null, { headers: corsHeaders(origin) });
   }),
@@ -41,6 +41,11 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const origin = request.headers.get('Origin') ?? env.CLIENT_ORIGIN ?? DEFAULT_ORIGIN;
     const headers = corsHeaders(origin);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return new Response('Unauthorized', { status: 401, headers });
+    }
+
     const apiKey = getApiKey();
     if (!apiKey) {
       return new Response('Gemini API key is not configured.', { status: 500, headers });
@@ -67,7 +72,7 @@ http.route({
         system: SYSTEM_PROMPT,
         messages,
         tools,
-        maxSteps: isRagEnabled() ? 4 : 1,
+        stopWhen: stepCountIs(isRagEnabled() ? 4 : 1),
       });
       const reader = result.textStream.getReader();
       const encoder = new TextEncoder();
