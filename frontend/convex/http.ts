@@ -1,7 +1,6 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { stepCountIs, streamText } from 'ai';
 import { httpRouter } from 'convex/server';
-
 import { httpAction } from './_generated/server';
 import { buildChatMessages, createRagSearchTool, SYSTEM_PROMPT } from './chatRag';
 

@@ -10,7 +10,6 @@ import { useAction } from 'convex/react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-
 const ChatPage = () => {
   const { t } = useTranslate();
   const navigate = useNavigate();
