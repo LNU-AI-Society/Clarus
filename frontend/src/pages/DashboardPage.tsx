@@ -1,10 +1,3 @@
-import { getHistory } from '../services/api';
-import { GuidedSession } from '../types';
-import Navbar from '../components/Navbar';
-import { CheckCircle, Clock, FileText } from 'lucide-react';
-import { useTranslate } from '@tolgee/react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { api } from '../lib/convexApi';
 import type { GuidedSession } from '../types/guided';
