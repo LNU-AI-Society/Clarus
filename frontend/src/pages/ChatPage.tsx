@@ -9,9 +9,10 @@ import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 const ChatPage = () => {
-  const navigate = useNavigate();
   const { t } = useTranslate();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -143,6 +144,7 @@ const ChatPage = () => {
           <LanguageSwitch />
         </div>
         <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
+
           {isEmpty ? (
             <div className="flex flex-1 flex-col justify-end gap-6">
               <div className="flex w-full items-center justify-center">

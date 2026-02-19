@@ -1,9 +1,8 @@
 import { getWorkflows, startSession, getStep, submitAnswer } from '../services/api';
 import { WorkflowMetadata, GuidedSession, GuidedStep } from '../types';
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import {
   AlertTriangle,
-  ArrowLeft,
   ArrowRight,
   Calendar,
   CheckCircle,
@@ -144,27 +143,20 @@ const GuidedPage = () => {
     return key ? t(key) : warning;
   };
 
-  const topRow = (
-    <header className="relative z-20">
-      <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-[18px] py-5 sm:px-6">
+  const navbar = (
+    <Navbar
+      backTo="/"
+      backAriaLabel={t('guided.top.back')}
+      actions={
         <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#5c6664] transition hover:text-[#1f2937]"
+          type="button"
+          onClick={() => navigate('/guided/history')}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
         >
-          <ArrowLeft className="h-4 w-4" />
-          {t('guided.top.back')}
+          {t('guided.top.viewHistory')}
         </button>
-        <div className="flex items-center gap-3">
-          <LanguageSwitch />
-          <button
-            onClick={() => window.location.href = '/guided/history'}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]"
-          >
-            {t('guided.top.viewHistory')}
-          </button>
-        </div>
-      </div>
-    </header>
+      }
+    />
   );
 
   // Initial load
@@ -212,11 +204,13 @@ const GuidedPage = () => {
   // 1. Home: Workflow List
   if (!session) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative min-h-screen text-[#1f2937]">
+        <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
+          <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+          <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        </div>
         <div className="relative z-10 min-h-screen">
-          {topRow}
+          {navbar}
           <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-[#1f2937]">{t('guided.list.title')}</h1>
@@ -247,11 +241,13 @@ const GuidedPage = () => {
   // 2. Dashboard: Completed Session
   if (session.is_complete) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      <div className="relative min-h-screen text-[#1f2937]">
+        <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
+          <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+          <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        </div>
         <div className="relative z-10 min-h-screen">
-          {topRow}
+          {navbar}
           <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
             <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
               <div className="mb-6 flex items-center gap-3">
@@ -327,11 +323,13 @@ const GuidedPage = () => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)] text-[#1f2937]">
-      <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
-      <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+    <div className="relative min-h-screen text-[#1f2937]">
+      <div className="fixed inset-0 z-0 bg-[linear-gradient(135deg,_#f7f2ed_0%,_#fbf7f2_45%,_#eef6f3_100%)]">
+        <div className="pointer-events-none absolute -left-[200px] -top-[240px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,231,214,0.9),_transparent_70%)] opacity-70 blur-[0.5px]" />
+        <div className="pointer-events-none absolute -bottom-[260px] -right-[220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(221,244,241,0.8),_transparent_70%)] opacity-70 blur-[0.5px]" />
+      </div>
       <div className="relative z-10 min-h-screen">
-        {topRow}
+        {navbar}
         <div className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6">
           <div className="rounded-[20px] border border-[rgba(229,222,216,0.8)] bg-white p-8 shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
             <div className="mb-8">

@@ -1,13 +1,13 @@
 import { SignIn } from '@clerk/clerk-react';
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
     return (
-        <div className="relative flex min-h-screen items-center justify-center bg-slate-50">
-            <div className="absolute right-4 top-4">
-                <LanguageSwitch />
-            </div>
-            <SignIn routing="path" path="/login" />
+        <div className="relative flex min-h-screen flex-col bg-slate-50">
+            <Navbar />
+            <main className="flex flex-1 items-center justify-center">
+                <SignIn routing="path" path="/login" />
+            </main>
         </div>
     );
 };
