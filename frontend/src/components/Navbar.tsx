@@ -11,7 +11,6 @@ type NavbarProps = {
   backAriaLabel?: string;
   actions?: ReactNode;
   className?: string;
-  containerClassName?: string;
 };
 
 const Navbar = ({
@@ -19,12 +18,9 @@ const Navbar = ({
   backAriaLabel,
   actions,
   className,
-  containerClassName,
 }: NavbarProps) => {
   const { t } = useTranslate();
   const resolvedBackLabel = backAriaLabel ?? t('nav.back');
-  const hasBack = Boolean(backTo);
-  const containerPadding = hasBack ? 'pl-14 sm:pl-16' : '';
 
   return (
     <header
@@ -38,9 +34,7 @@ const Navbar = ({
         </div>
       )}
       <div
-        className={`relative mx-auto flex w-full max-w-layout items-center justify-between px-4 py-4 sm:px-6 ${
-          containerPadding
-        } ${containerClassName ?? ''}`}
+        className={`relative mx-auto flex w-full max-w-layout items-center justify-between px-4 py-4 sm:px-6 `}
       >
         <div className="flex items-center gap-3">
           <Link to="/" className="font-display text-ink text-[20px] font-bold">
