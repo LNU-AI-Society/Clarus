@@ -6,7 +6,12 @@ const languageStorageKey = 'clarus.language';
 
 const languages = [
   { code: 'en', shortLabel: 'EN', labelKey: 'languageSwitch.english', flag: '🇬🇧' },
+  { code: 'de', shortLabel: 'DE', labelKey: 'languageSwitch.german', flag: '🇩🇪' },
+  { code: 'es', shortLabel: 'ES', labelKey: 'languageSwitch.spanish', flag: '🇪🇸' },
+  { code: 'fi', shortLabel: 'FI', labelKey: 'languageSwitch.finnish', flag: '🇫🇮' },
+  { code: 'nl', shortLabel: 'NL', labelKey: 'languageSwitch.dutch', flag: '🇳🇱' },
   { code: 'sv', shortLabel: 'SV', labelKey: 'languageSwitch.swedish', flag: '🇸🇪' },
+  { code: 'zh', shortLabel: 'ZH', labelKey: 'languageSwitch.mandarin', flag: '🇨🇳' },
 ];
 
 type LanguageSwitchProps = {
