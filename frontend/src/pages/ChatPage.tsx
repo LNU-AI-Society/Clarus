@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/clerk-react';
 import Navbar from '../components/Navbar';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
@@ -9,15 +10,28 @@ import { useAction } from 'convex/react';
 import { Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const resolveChatEndpoint = () => {
+  const siteUrl = import.meta.env.VITE_CONVEX_SITE_URL?.trim();
+  if (siteUrl) {
+    return `${trimTrailingSlash(siteUrl)}/chat`;
+  }
+
+  const convexUrl = import.meta.env.VITE_CONVEX_URL?.trim() || 'http://localhost:3210';
+  return `${trimTrailingSlash(convexUrl)}/chat`;
+};
+
 const ChatPage = () => {
   const { t } = useTranslate();
+  const { getToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [footerHeight, setFooterHeight] = useState(0);
   const footerRef = useRef<HTMLDivElement | null>(null);
-  const sendMessage = useAction(api.chat.sendMessage);
   const analyzeDocument = useAction(api.documents.analyzeDocument);
+  const chatEndpoint = resolveChatEndpoint();
   const isEmpty = messages.length === 0;
   const suggestedQuestionKeys = [
     'chat.suggested.q1',
@@ -30,42 +44,218 @@ const ChatPage = () => {
   const handleSend = async (text: string = userInput) => {
     if (!text.trim() || isLoading) return;
 
+    const trimmedText = text.trim();
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      text: text.trim(),
+      text: trimmedText,
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const assistantMsgId = (Date.now() + 1).toString();
+    const errorMsgId = (Date.now() + 2).toString();
+    const history = messages
+      .filter((m) => !m.isError)
+      .map((m) => ({ role: m.role, content: m.text }));
+
+    setMessages((prev) => [...prev, userMsg, { id: assistantMsgId, role: 'model', text: '' }]);
     setUserInput('');
     setIsLoading(true);
 
     try {
-      const history = messages
-        .filter((m) => !m.isError)
-        .map((m) => ({ role: m.role, content: m.text }));
-      const response = await sendMessage({
-        message: userMsg.text,
-        history,
+      const token = await getToken({ template: 'convex' });
+      if (!token) {
+        throw new Error('Unauthorized');
+      }
+
+      const response = await fetch(chatEndpoint, {
+        method: 'POST',
+        headers: {
+          Accept: 'text/event-stream',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          message: userMsg.text,
+          history,
+        }),
       });
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: response.answer?.trim() || t('chat.errors.noResponse'),
-        citations: response.citations,
+
+      if (!response.ok) {
+        const errorText = (await response.text()).trim();
+        throw new Error(errorText || `Request failed with status ${response.status}.`);
+      }
+
+      if (!response.body) {
+        throw new Error('No stream received from server.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      const contentType = response.headers.get('Content-Type') ?? '';
+      const isEventStream = contentType.toLowerCase().includes('text/event-stream');
+      let streamedCitations: Message['citations'];
+
+      const updateAssistantMessage = (nextText: string, nextCitations?: Message['citations']) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsgId
+              ? {
+                  ...msg,
+                  text: nextText,
+                  citations: nextCitations,
+                }
+              : msg,
+          ),
+        );
       };
 
-      setMessages((prev) => [...prev, botMsg]);
+      let streamedText = '';
+
+      if (isEventStream) {
+        let streamBuffer = '';
+
+        const consumeSseEvent = (rawEvent: string) => {
+          if (!rawEvent.trim()) {
+            return;
+          }
+
+          const lines = rawEvent.replace(/\r/g, '').split('\n');
+          let eventName = 'message';
+          const dataLines: string[] = [];
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              eventName = line.slice(6).trim();
+              continue;
+            }
+            if (line.startsWith('data:')) {
+              dataLines.push(line.slice(5).trimStart());
+            }
+          }
+
+          const data = dataLines.join('\n');
+          if (eventName === 'text') {
+            let delta = data;
+            try {
+              const parsed = JSON.parse(data) as unknown;
+              if (typeof parsed === 'string') {
+                delta = parsed;
+              }
+            } catch {
+              // Keep raw data fallback when parsing fails.
+            }
+            streamedText += delta;
+            updateAssistantMessage(streamedText, streamedCitations);
+            return;
+          }
+
+          if (eventName === 'citations') {
+            try {
+              const parsed = JSON.parse(data) as unknown;
+              if (Array.isArray(parsed)) {
+                streamedCitations = parsed as Message['citations'];
+                updateAssistantMessage(streamedText, streamedCitations);
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse citations from stream event', parseError);
+            }
+            return;
+          }
+
+          if (eventName === 'error') {
+            let message = 'Failed to generate response.';
+            try {
+              const parsed = JSON.parse(data) as { message?: string };
+              if (parsed?.message) {
+                message = parsed.message;
+              }
+            } catch {
+              if (data.trim()) {
+                message = data.trim();
+              }
+            }
+            throw new Error(message);
+          }
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          streamBuffer += decoder.decode(value, { stream: true });
+          let boundary = streamBuffer.indexOf('\n\n');
+          while (boundary !== -1) {
+            const rawEvent = streamBuffer.slice(0, boundary);
+            streamBuffer = streamBuffer.slice(boundary + 2);
+            consumeSseEvent(rawEvent);
+            boundary = streamBuffer.indexOf('\n\n');
+          }
+        }
+
+        streamBuffer += decoder.decode();
+        if (streamBuffer.trim()) {
+          for (const rawEvent of streamBuffer.split('\n\n')) {
+            consumeSseEvent(rawEvent);
+          }
+        }
+      } else {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          streamedText += decoder.decode(value, { stream: true });
+          updateAssistantMessage(streamedText, streamedCitations);
+        }
+
+        streamedText += decoder.decode();
+      }
+
+      const finalText = streamedText.trim() || t('chat.errors.noResponse');
+      updateAssistantMessage(finalText, streamedCitations);
     } catch (error) {
       console.error(error);
-      const errorMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: t('chat.errors.generic'),
-        isError: true,
-      };
+      const genericErrorText = t('chat.errors.generic');
 
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => {
+        const assistantMessage = prev.find((msg) => msg.id === assistantMsgId);
+        if (!assistantMessage) {
+          return [
+            ...prev,
+            {
+              id: errorMsgId,
+              role: 'model',
+              text: genericErrorText,
+              isError: true,
+            },
+          ];
+        }
+
+        if (assistantMessage.text.trim()) {
+          return [
+            ...prev,
+            {
+              id: errorMsgId,
+              role: 'model',
+              text: genericErrorText,
+              isError: true,
+            },
+          ];
+        }
+
+        return prev.map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                ...msg,
+                text: genericErrorText,
+                isError: true,
+              }
+            : msg,
+        );
+      });
     } finally {
       setIsLoading(false);
     }
