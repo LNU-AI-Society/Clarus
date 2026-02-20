@@ -14,7 +14,7 @@
     "node": ">=18.17"
   },
   "dependencies": {
-    "@mozilla/readability": "^0.5.0",
+    "@mozilla/readability": "^0.6.0",
     "convex": "^1.31.6",
     "dotenv": "^16.6.1",
     "fast-xml-parser": "^5.3.2",
