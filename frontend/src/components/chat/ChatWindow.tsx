@@ -21,8 +21,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (messages.length === 0 && !isLoading) {
       return;
     }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [isLoading, messages.length]);
+    bottomRef.current?.scrollIntoView({ behavior: isLoading ? 'auto' : 'smooth' });
+  }, [isLoading, messages]);
 
   return (
     <div
