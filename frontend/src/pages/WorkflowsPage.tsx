@@ -14,7 +14,7 @@ const WorkflowsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <Navbar backTo="/dashboard" containerClassName="max-w-4xl" />
+      <Navbar backTo="/dashboard" />
       <main className="mx-auto max-w-4xl p-6">
         <div className="mb-6">
           <h1 className="text-xl font-bold tracking-tight text-slate-800">
