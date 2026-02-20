@@ -1,19 +1,10 @@
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import { api } from '../lib/convexApi';
 import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
 import { useQuery } from 'convex/react';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  ChevronRight,
-  Clock,
-  FileText,
-  Plus,
-} from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle, ChevronRight, Clock, FileText, Plus } from 'lucide-react';
 
 const workflowTitleKeys: Record<string, string> = {
   renewal: 'guidedHistory.workflow.renewal.title',
@@ -42,28 +33,20 @@ const GuidedHistoryPage = () => {
       <div className="from-halo-peach/90 pointer-events-none absolute -top-60 -left-52 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       <div className="from-halo-mint/80 pointer-events-none absolute -right-56 -bottom-64 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       <div className="relative z-10 min-h-screen">
-        <main className="max-w-layout mx-auto w-full px-4 py-10 sm:px-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <Navbar
+          backTo="/guided"
+          actions={
             <button
               type="button"
               onClick={() => navigate({ to: '/guided' })}
-              className="text-muted hover:text-ink inline-flex items-center gap-2 text-sm font-medium transition"
+              className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <T keyName="guidedHistory.back" />
+              <Plus className="h-4 w-4" />
+              <T keyName="guidedHistory.newSession" />
             </button>
-            <div className="flex items-center gap-3">
-              <LanguageSwitch />
-              <button
-                type="button"
-                onClick={() => navigate({ to: '/guided' })}
-                className="bg-brand shadow-brand hover:bg-brand-hover mt-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
-              >
-                <Plus className="h-4 w-4" />
-                <T keyName="guidedHistory.newSession" />
-              </button>
-            </div>
-          </div>
+          }
+        />
+        <main className="max-w-layout mx-auto w-full px-4 py-10 sm:px-6">
           {isLoading ? (
             <div className="flex min-h-96 items-center justify-center">
               <div className="text-faint flex items-center gap-3">

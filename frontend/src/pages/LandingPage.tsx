@@ -1,9 +1,8 @@
-import LanguageSwitch from '../components/LanguageSwitch';
-import { SignedIn, SignedOut, SignInButton, SignOutButton, SignUpButton } from '@clerk/clerk-react';
+import Navbar from '../components/Navbar';
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/clerk-react';
 import { useNavigate } from '@tanstack/react-router';
 import { T, useTranslate } from '@tolgee/react';
-import { User } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -11,8 +10,6 @@ const LandingPage = () => {
   const fullIntroText = t('landing.hero.intro');
   const [typedIntroText, setTypedIntroText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -48,85 +45,12 @@ const LandingPage = () => {
     };
   }, [fullIntroText]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!profileRef.current) return;
-      if (!profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
   return (
     <div className="bg-app-bg text-ink relative min-h-screen overflow-hidden">
       <div className="from-halo-peach/90 pointer-events-none absolute -top-44 -left-36 h-96 w-96 rounded-full bg-radial to-transparent" />
       <div className="from-halo-mint/85 pointer-events-none absolute -right-44 -bottom-52 h-96 w-96 rounded-full bg-radial to-transparent" />
       <div className="from-halo-gold/85 pointer-events-none absolute -top-24 right-24 h-64 w-64 rounded-full bg-radial to-transparent" />
-      <header className="relative z-20">
-        <div className="max-w-layout mx-auto flex w-full items-center justify-between gap-6 px-4 py-5 sm:px-6">
-          <div className="font-display text-ink text-xl font-bold">Clarus</div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitch />
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button
-                  type="button"
-                  className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
-                >
-                  <T keyName="landing.auth.signIn" />
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <div ref={profileRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsProfileOpen((prev) => !prev)}
-                  aria-haspopup="menu"
-                  aria-expanded={isProfileOpen}
-                  aria-label="Profile menu"
-                  className="border-border-strong/70 bg-surface/90 text-brand shadow-soft hover:bg-surface-muted hover:shadow-soft-hover inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px"
-                >
-                  <User className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <div
-                  role="menu"
-                  aria-hidden={!isProfileOpen}
-                  className={`border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 ${
-                    isProfileOpen
-                      ? 'translate-y-0 opacity-100'
-                      : 'pointer-events-none translate-y-1 opacity-0'
-                  }`}
-                >
-                  <SignOutButton>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="text-muted hover:bg-surface-muted flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium transition-colors"
-                    >
-                      <T keyName="landing.auth.signOut" />
-                    </button>
-                  </SignOutButton>
-                </div>
-              </div>
-            </SignedIn>
-          </div>
-        </div>
-      </header>
+      <Navbar />
       <main className="max-w-layout mx-auto w-full px-4 sm:px-6">
         <div className="flex flex-col gap-12 pt-12 pb-16 lg:flex-row lg:items-center">
           <section className="flex-1 space-y-8">

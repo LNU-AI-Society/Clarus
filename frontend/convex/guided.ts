@@ -1,7 +1,34 @@
 import type { Doc } from './_generated/dataModel';
-import { mutation, query } from './_generated/server';
+import { api } from './_generated/api';
+import { action, mutation, query } from './_generated/server';
 import { getStep, getWorkflow, WORKFLOWS } from './workflows';
+import { createOpenAI } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 import { v } from 'convex/values';
+
+const DEFAULT_MODEL = 'openai/gpt-4o-mini';
+const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const env =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const readEnv = (name: string) => env[name]?.trim() || undefined;
+const getApiKey = () => readEnv('OPENROUTER_API_KEY');
+const resolveModel = () => readEnv('OPENROUTER_MODEL') || DEFAULT_MODEL;
+const resolveBaseUrl = () => readEnv('OPENROUTER_BASE_URL') || DEFAULT_OPENROUTER_BASE_URL;
+
+const buildOpenRouterHeaders = (): Record<string, string> | undefined => {
+  const referer = readEnv('OPENROUTER_HTTP_REFERER');
+  const title = readEnv('OPENROUTER_X_TITLE');
+  const headers: Record<string, string> = {};
+
+  if (referer) {
+    headers['HTTP-Referer'] = referer;
+  }
+  if (title) {
+    headers['X-Title'] = title;
+  }
+
+  return Object.keys(headers).length > 0 ? headers : undefined;
+};
 
 const buildTasksAndWarnings = (workflowId: string, answers: Record<string, string>) => {
   const tasks: Array<{ id: string; title: string; description: string; due_date?: string }> = [];
@@ -66,12 +93,51 @@ type AuthContext = {
   };
 };
 
+type SummarySession = {
+  workflow_id: string;
+  answers: Record<string, string>;
+  tasks: Array<{ id: string; title: string; description: string; due_date?: string }>;
+  warnings: string[];
+  is_complete: boolean;
+};
+
 const requireUserId = async (ctx: AuthContext) => {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error('Unauthorized');
   }
   return identity.subject;
+};
+
+const buildFallbackSummary = (session: SummarySession) => {
+  const workflow = getWorkflow(session.workflow_id);
+  const workflowTitle = workflow?.title ?? session.workflow_id;
+  const answers = session.answers ?? {};
+  const answerLines = Object.entries(answers)
+    .filter(([, value]) => value?.trim())
+    .map(([stepId, value]) => {
+      const stepTitle = workflow?.steps.find((step) => step.id === stepId)?.title ?? stepId;
+      return `- ${stepTitle}: ${value}`;
+    });
+  const warningLines = (session.warnings ?? []).map((warning) => `- ${warning}`);
+  const taskLines = (session.tasks ?? []).map((task) => {
+    const due = task.due_date ? ` (Due ${task.due_date})` : '';
+    return `- ${task.title}${due}: ${task.description}`;
+  });
+
+  const sections: string[] = [`Workflow: ${workflowTitle}.`];
+
+  if (answerLines.length > 0) {
+    sections.push(`Key answers:\n${answerLines.join('\n')}`);
+  }
+  if (warningLines.length > 0) {
+    sections.push(`Warnings:\n${warningLines.join('\n')}`);
+  }
+  if (taskLines.length > 0) {
+    sections.push(`Next steps:\n${taskLines.join('\n')}`);
+  }
+
+  return sections.join('\n\n');
 };
 
 export const listWorkflows = query({
@@ -200,5 +266,83 @@ export const getHistory = query({
       .order('desc')
       .collect();
     return sessions.map((session) => mapSession(session));
+  },
+});
+
+export const generateSummary = action({
+  args: {
+    sessionId: v.id('guidedSessions'),
+    language: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireUserId(ctx);
+    const runQuery = ctx.runQuery as (
+      queryRef: unknown,
+      args: Record<string, unknown>,
+    ) => Promise<unknown>;
+    const session = (await runQuery(api.guided.getSession, {
+      sessionId: args.sessionId,
+    })) as SummarySession | null;
+
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    const fallbackSummary = buildFallbackSummary(session);
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      return { summary: fallbackSummary };
+    }
+
+    const workflow = getWorkflow(session.workflow_id);
+    const workflowTitle = workflow?.title ?? session.workflow_id;
+    const language = args.language?.trim() || 'en';
+    const answers = Object.entries(session.answers ?? {})
+      .filter(([, value]) => value?.trim())
+      .map(([stepId, value]) => {
+        const stepTitle = workflow?.steps.find((step) => step.id === stepId)?.title ?? stepId;
+        return `${stepTitle}: ${value}`;
+      })
+      .join('\n');
+    const warnings = (session.warnings ?? []).join('\n');
+    const tasks = (session.tasks ?? [])
+      .map((task) => {
+        const due = task.due_date ? ` (Due ${task.due_date})` : '';
+        return `${task.title}${due}: ${task.description}`;
+      })
+      .join('\n');
+
+    const prompt = [
+      `Language: ${language}`,
+      `Workflow: ${workflowTitle}`,
+      session.is_complete ? 'Status: complete' : 'Status: in progress',
+      'Answers:',
+      answers || 'None',
+      'Warnings:',
+      warnings || 'None',
+      'Tasks:',
+      tasks || 'None',
+    ].join('\n');
+
+    const openrouter = createOpenAI({
+      apiKey,
+      baseURL: resolveBaseUrl(),
+      headers: buildOpenRouterHeaders(),
+    });
+
+    try {
+      const result = await generateText({
+        model: openrouter.chat(resolveModel()),
+        system:
+          'You are Clarus, a helpful legal assistant. Summarize the guided workflow outcome in plain language. Do not add legal advice. Do not invent facts. Keep it concise and use short paragraphs or bullets. Respond in the specified language.',
+        messages: [{ role: 'user', content: prompt }],
+        maxTokens: 320,
+      });
+
+      return { summary: result.text?.trim() || fallbackSummary };
+    } catch (error) {
+      console.error('Guided summary generation failed', error);
+      return { summary: fallbackSummary };
+    }
   },
 });

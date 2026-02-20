@@ -1,18 +1,16 @@
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import ChatInput from '../components/chat/ChatInput';
 import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
 import { Message } from '../components/chat/types';
 import { api } from '../lib/convexApi';
 import { T, useTranslate } from '@tolgee/react';
-import { useNavigate } from '@tanstack/react-router';
 import { useAction } from 'convex/react';
-import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const ChatPage = () => {
   const { t } = useTranslate();
-  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -145,18 +143,8 @@ const ChatPage = () => {
         <div className="from-halo-mint/80 pointer-events-none absolute -right-56 -bottom-64 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/' })}
-          className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand fixed top-4 left-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px sm:top-6 sm:left-6"
-          aria-label="Back to home"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="fixed top-4 right-4 z-30 sm:top-6 sm:right-6">
-          <LanguageSwitch />
-        </div>
-        <main className="flex flex-1 flex-col pt-16" style={{ paddingBottom: footerPadding }}>
+        <Navbar backTo="/" />
+        <main className="flex flex-1 flex-col pt-6" style={{ paddingBottom: footerPadding }}>
 
           {isEmpty ? (
             <div className="flex flex-1 flex-col justify-end gap-6">

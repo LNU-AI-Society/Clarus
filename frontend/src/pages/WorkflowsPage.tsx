@@ -1,10 +1,10 @@
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import { api } from '../lib/convexApi';
 import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
 import { T } from '@tolgee/react';
 import { useQuery } from 'convex/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Clock, FileText } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText } from 'lucide-react';
 
 const WorkflowsPage = () => {
   const navigate = useNavigate();
@@ -14,28 +14,13 @@ const WorkflowsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-indigo-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight text-slate-800">
-              <T keyName="workflows.title" />
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitch />
-            <button
-              type="button"
-              onClick={() => navigate({ to: '/dashboard' })}
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <T keyName="workflows.backToDashboard" />
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <Navbar backTo="/dashboard" containerClassName="max-w-4xl" />
       <main className="mx-auto max-w-4xl p-6">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold tracking-tight text-slate-800">
+            <T keyName="workflows.title" />
+          </h1>
+        </div>
         {isLoading ? (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
             <div className="flex items-center gap-2">

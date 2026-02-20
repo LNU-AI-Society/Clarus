@@ -21,7 +21,7 @@ const BackNavigation = ({ to, ariaLabel, className, isFixed = true }: BackNaviga
         type="button"
         onClick={() => navigate({ to })}
         aria-label={ariaLabel}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(229,222,216,0.9)] bg-white/85 text-[#5c6664] transition-all duration-200 hover:-translate-y-[1px] hover:border-[#a7b9b4] hover:text-[#0f7a6a]"
+        className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-px"
       >
         <ArrowLeft className="h-4 w-4" />
       </button>

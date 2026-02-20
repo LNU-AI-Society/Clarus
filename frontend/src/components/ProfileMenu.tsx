@@ -42,14 +42,14 @@ const ProfileMenu = ({ className }: ProfileMenuProps) => {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={t('auth.profileMenu')}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 text-[#0f7a6a] shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#f5f1ec] hover:shadow-[0_14px_30px_rgba(31,41,55,0.12)]"
+        className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-soft transition-all duration-200 hover:-translate-y-px hover:shadow-soft-hover"
       >
         <User className="h-4 w-4" aria-hidden="true" />
       </button>
       <div
         role="menu"
         aria-hidden={!isOpen}
-        className={`absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border border-[rgba(229,222,216,0.8)] bg-white/95 p-2 text-sm text-[#1f2937] shadow-[0_18px_40px_rgba(31,41,55,0.16)] backdrop-blur-sm transition-all duration-150 ${
+        className={`border-border/80 bg-surface/95 text-ink shadow-popover absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 ${
           isOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
         }`}
       >
@@ -58,7 +58,7 @@ const ProfileMenu = ({ className }: ProfileMenuProps) => {
             type="button"
             role="menuitem"
             onClick={() => setIsOpen(false)}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium text-[#5c6664] transition-colors hover:bg-[#f5f1ec]"
+            className="text-muted hover:bg-surface-muted flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium transition-colors"
           >
             {t('auth.signOut')}
           </button>
