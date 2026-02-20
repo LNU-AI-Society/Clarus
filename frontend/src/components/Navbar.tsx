@@ -23,6 +23,8 @@ const Navbar = ({
 }: NavbarProps) => {
   const { t } = useTranslate();
   const resolvedBackLabel = backAriaLabel ?? t('nav.back');
+  const hasBack = Boolean(backTo);
+  const containerPadding = hasBack ? 'pl-14 sm:pl-16' : '';
 
   return (
     <header
@@ -36,12 +38,12 @@ const Navbar = ({
         </div>
       )}
       <div
-        className={`relative mx-auto flex w-full max-w-[1120px] items-center justify-between px-[18px] py-4 sm:px-6 ${
-          containerClassName ?? ''
-        }`}
+        className={`relative mx-auto flex w-full max-w-layout items-center justify-between px-4 py-4 sm:px-6 ${
+          containerPadding
+        } ${containerClassName ?? ''}`}
       >
         <div className="flex items-center gap-3">
-          <Link to="/" className="font-['Sora'] text-[20px] font-bold text-[#1f2937]">
+          <Link to="/" className="font-display text-ink text-[20px] font-bold">
             Clarus
           </Link>
         </div>
@@ -51,12 +53,12 @@ const Navbar = ({
           <SignedOut>
             <div className="flex items-center gap-2">
               <SignInButton mode="modal">
-                <button className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(167,185,180,0.7)] bg-white/90 px-4 py-2 text-sm font-semibold text-[#0f7a6a] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(31,41,55,0.1)]">
+                <button className="border-border/90 bg-surface/85 text-muted hover:border-border-strong hover:text-brand inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-px">
                   {t('auth.signIn')}
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0f7a6a] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(15,122,106,0.28)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#0b6b5e]">
+                <button className="bg-brand shadow-brand hover:bg-brand-hover inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px">
                   {t('auth.signUp')}
                 </button>
               </SignUpButton>

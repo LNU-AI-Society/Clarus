@@ -1,20 +1,9 @@
-import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
-import { createFileRoute } from '@tanstack/react-router';
-import GuidedPage from '../pages/GuidedPage';
+import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/guided')({
   component: GuidedRoute,
 });
 
 function GuidedRoute() {
-  return (
-    <>
-      <SignedIn>
-        <GuidedPage />
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
+  return <Outlet />;
 }

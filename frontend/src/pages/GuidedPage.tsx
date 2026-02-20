@@ -1,4 +1,4 @@
-import LanguageSwitch from '../components/LanguageSwitch';
+import Navbar from '../components/Navbar';
 import { api } from '../lib/convexApi';
 import type {
   GuidedSession,
@@ -6,18 +6,14 @@ import type {
   GuidedWorkflowMetadata,
   GuidedWorkflowStep,
 } from '../types/guided';
-import { useNavigate } from '@tanstack/react-router';
-import { T, useTranslate } from '@tolgee/react';
-import { useMutation, useQuery } from 'convex/react';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  Calendar,
-  CheckCircle,
-  ChevronRight,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { T, useTolgee, useTranslate } from '@tolgee/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
+import { AlertTriangle, ArrowRight, Calendar, CheckCircle, ChevronRight } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+import { useEffect, useState } from 'react';
 
 const workflowCopy: Record<string, { titleKey: string; descriptionKey: string }> = {
   renewal: {
@@ -102,13 +98,29 @@ const warningCopy: Record<string, string> = {
     'guided.warnings.change_employer.within_24_months',
 };
 
-const GuidedPage = () => {
+type GuidedPageProps = {
+  initialSessionId?: string;
+};
+
+type GuidedSummaryResult = {
+  summary?: string;
+};
+
+const GuidedPage = ({ initialSessionId }: GuidedPageProps) => {
   const navigate = useNavigate();
+  const tolgee = useTolgee(['language']);
   const { t } = useTranslate();
   const [session, setSession] = useState<GuidedSession | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const workflows = (useQuery(api.guided.listWorkflows) ?? []) as GuidedWorkflowMetadata[];
+  const sessionQuery = useQuery(
+    api.guided.getSession,
+    initialSessionId ? { sessionId: initialSessionId } : 'skip',
+  ) as GuidedSession | undefined;
   const currentStep = useQuery(
     api.guided.getWorkflowStep,
     session && session.current_step_id && !session.is_complete
@@ -120,6 +132,52 @@ const GuidedPage = () => {
   ) as GuidedWorkflowStep | undefined;
   const startSessionMutation = useMutation(api.guided.startSession);
   const submitAnswerMutation = useMutation(api.guided.submitAnswer);
+  const generateSummaryAction = useAction(api.guided.generateSummary);
+  const language = tolgee.getLanguage() ?? 'en';
+  const isSessionLoading = Boolean(initialSessionId && sessionQuery === undefined && !session);
+
+  useEffect(() => {
+    if (sessionQuery) {
+      setSession(sessionQuery);
+    }
+  }, [sessionQuery]);
+
+  useEffect(() => {
+    setSummary(null);
+    setSummaryError(false);
+  }, [session?.id]);
+
+  useEffect(() => {
+    if (!session?.is_complete || summary || summaryLoading || summaryError) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    generateSummaryAction({ sessionId: session.id, language })
+      .then((result) => {
+        const summaryResult = result as GuidedSummaryResult;
+        if (summaryResult?.summary) {
+          setSummary(summaryResult.summary);
+        } else {
+          setSummaryError(true);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        setSummaryError(true);
+      })
+      .finally(() => {
+        setSummaryLoading(false);
+      });
+  }, [
+    generateSummaryAction,
+    language,
+    session?.id,
+    session?.is_complete,
+    summary,
+    summaryError,
+    summaryLoading,
+  ]);
 
   const getWorkflowTitleKey = (workflowId: string) => workflowCopy[workflowId]?.titleKey;
 
@@ -162,29 +220,23 @@ const GuidedPage = () => {
     return key ? <T keyName={key} /> : warning;
   };
 
+  const handleResetSession = () => {
+    setSession(null);
+    navigate({ to: '/guided' });
+  };
+
   const topRow = (
-    <header className="relative z-20">
-      <div className="mx-auto flex w-full max-w-layout items-center justify-between gap-6 px-4 py-5 sm:px-6">
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/' })}
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
+    <Navbar
+      backTo="/"
+      actions={
+        <Link
+          to="/guided/history"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <T keyName="guided.top.back" />
-        </button>
-        <div className="flex items-center gap-3">
-          <LanguageSwitch />
-          <button
-            type="button"
-            onClick={() => navigate({ to: '/guided/history' })}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
-          >
-            <T keyName="guided.top.viewHistory" />
-          </button>
-        </div>
-      </div>
-    </header>
+          <T keyName="guided.top.viewHistory" />
+        </Link>
+      }
+    />
   );
 
   const handleStart = async (id: string) => {
@@ -215,6 +267,14 @@ const GuidedPage = () => {
       setIsLoading(false);
     }
   };
+
+  if (isSessionLoading) {
+    return (
+      <div className="p-8 text-center text-faint">
+        <T keyName="guided.step.loading" />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -298,6 +358,27 @@ const GuidedPage = () => {
                 </div>
               )}
 
+              <div className="mb-8 rounded-2xl border border-border/80 bg-surface-panel p-4">
+                <h3 className="mb-3 text-sm font-semibold text-ink">
+                  <T keyName="guided.summary.title" />
+                </h3>
+                {summaryLoading ? (
+                  <p className="text-sm text-muted">
+                    <T keyName="guided.summary.loading" />
+                  </p>
+                ) : summary ? (
+                  <div className="prose prose-sm prose-p:my-2 prose-ul:my-2 prose-li:my-1 prose-headings:mt-3 prose-headings:mb-2 max-w-none text-muted">
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                      {summary}
+                    </ReactMarkdown>
+                  </div>
+                ) : summaryError ? (
+                  <p className="text-sm text-muted">
+                    <T keyName="guided.summary.error" />
+                  </p>
+                ) : null}
+              </div>
+
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-ink">
                 <Calendar className="h-5 w-5 text-brand" />
                 <T keyName="guided.complete.actionPlan" />
@@ -324,7 +405,7 @@ const GuidedPage = () => {
 
               <button
                 type="button"
-                onClick={() => setSession(null)}
+                onClick={handleResetSession}
                 className="mt-8 text-sm font-semibold text-muted hover:text-ink"
               >
                 <T keyName="guided.complete.startAnother" />
@@ -358,7 +439,7 @@ const GuidedPage = () => {
             <div className="mb-8">
               <button
                 type="button"
-                onClick={() => setSession(null)}
+                onClick={handleResetSession}
                 className="mb-4 text-xs text-faint hover:text-muted"
               >
                 <T keyName="guided.step.cancel" />
