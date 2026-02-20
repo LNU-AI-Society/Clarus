@@ -269,6 +269,35 @@ export const getHistory = query({
   },
 });
 
+export const deleteSession = mutation({
+  args: { sessionId: v.id('guidedSessions') },
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.user_id !== userId) {
+      throw new Error('Session not found');
+    }
+
+    await ctx.db.delete(args.sessionId);
+  },
+});
+
+export const clearHistory = mutation({
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    const sessions = await ctx.db
+      .query('guidedSessions')
+      .withIndex('by_user_created', (q) => q.eq('user_id', userId))
+      .collect();
+
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
+
+    return { deleted: sessions.length };
+  },
+});
+
 export const generateSummary = action({
   args: {
     sessionId: v.id('guidedSessions'),

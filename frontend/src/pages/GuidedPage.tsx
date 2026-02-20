@@ -225,19 +225,7 @@ const GuidedPage = ({ initialSessionId }: GuidedPageProps) => {
     navigate({ to: '/guided' });
   };
 
-  const topRow = (
-    <Navbar
-      backTo="/"
-      actions={
-        <Link
-          to="/guided/history"
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
-        >
-          <T keyName="guided.top.viewHistory" />
-        </Link>
-      }
-    />
-  );
+  const topRow = <Navbar backTo="/" />;
 
   const handleStart = async (id: string) => {
     setIsLoading(true);
@@ -291,6 +279,14 @@ const GuidedPage = ({ initialSessionId }: GuidedPageProps) => {
               <p className="text-subtle">
                 <T keyName="guided.list.subtitle" />
               </p>
+              <div className="mt-4">
+                <Link
+                  to="/guided/history"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong/70 bg-surface/90 px-4 py-2 text-sm font-semibold text-brand shadow-soft transition-all duration-200 hover:shadow-card"
+                >
+                  <T keyName="guided.top.viewHistory" />
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
