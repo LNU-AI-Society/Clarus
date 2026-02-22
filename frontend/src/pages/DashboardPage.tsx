@@ -1,4 +1,4 @@
-import Navbar from '../components/Navbar';
+import LanguageSwitch from '../components/LanguageSwitch';
 import { api } from '../lib/convexApi';
 import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
@@ -17,16 +17,30 @@ const DashboardPage = () => {
       <div className="from-halo-peach/90 pointer-events-none absolute -top-60 -left-52 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       <div className="from-halo-mint/80 pointer-events-none absolute -right-56 -bottom-64 h-96 w-96 rounded-full bg-radial to-transparent opacity-70" />
       <div className="relative z-10 min-h-screen">
-        <Navbar backTo="/" />
-        <main className="max-w-layout mx-auto w-full px-4 py-10 sm:px-6">
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            <span className="bg-brand-soft text-brand inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
-              <T keyName="dashboard.badge" />
-            </span>
-            <span className="text-ink text-sm font-semibold">
-              <T keyName="dashboard.subtitle" />
-            </span>
+        <header className="border-border/80 bg-surface/75 border-b backdrop-blur-lg">
+          <div className="max-w-layout mx-auto flex w-full items-center justify-between px-4 py-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <span className="bg-brand-soft text-brand inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
+                <T keyName="dashboard.badge" />
+              </span>
+              <span className="text-ink text-sm font-semibold">
+                <T keyName="dashboard.subtitle" />
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <LanguageSwitch />
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/' })}
+                className="text-muted hover:text-ink text-sm font-medium"
+              >
+                <T keyName="dashboard.backToHome" />
+              </button>
+            </div>
           </div>
+        </header>
+
+        <main className="max-w-layout mx-auto w-full px-4 py-10 sm:px-6">
           <div className="grid gap-8 md:grid-cols-2">
             <section>
               <div className="mb-4 flex items-center justify-between">
