@@ -2,6 +2,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { RagSearchResult, searchRagChunks } from './ragSearch';
 
+//System prompt for teh chat mode.
 export const SYSTEM_PROMPT = [
   '<instructions>',
   'You are Clarus, a helpful legal assistant. Be clear, concise, and avoid legal advice.',
