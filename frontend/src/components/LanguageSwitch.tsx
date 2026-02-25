@@ -56,23 +56,18 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
           <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
         </Menu.Trigger>
         <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup className="border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 data-[state=open]:translate-y-0 data-[state=open]:opacity-100 data-[state=closed]:pointer-events-none data-[state=closed]:translate-y-1 data-[state=closed]:opacity-0">
+          <Menu.Positioner className="z-50">
+            <Menu.Popup className="border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-50 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 data-[state=closed]:pointer-events-none data-[state=closed]:translate-y-1 data-[state=closed]:opacity-0 data-[state=open]:translate-y-0 data-[state=open]:opacity-100">
               {languages.map((language) => {
                 const isActive = currentLanguage === language.code;
                 return (
                   <Menu.Item
                     key={language.code}
-                    render={
-                      <button
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={isActive}
-                      />
-                    }
+                    render={<button type="button" role="menuitemradio" aria-checked={isActive} />}
                     onClick={() => handleChange(language.code)}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors ${isActive ? 'bg-brand-soft text-brand' : 'text-muted hover:bg-surface-muted'
-                      }`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors ${
+                      isActive ? 'bg-brand-soft text-brand' : 'text-muted hover:bg-surface-muted'
+                    }`}
                   >
                     <span className="text-base leading-none" aria-hidden="true">
                       {language.flag}
