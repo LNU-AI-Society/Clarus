@@ -3,6 +3,20 @@ import { z } from 'zod';
 import { RagSearchResult, searchRagChunks } from './ragSearch';
 
 //System prompt for teh chat mode.
+const LANGUAGE_LABELS: Record<string, string> = {
+  de: 'German',
+  en: 'English',
+  es: 'Spanish',
+  fi: 'Finnish',
+  nl: 'Dutch',
+  sv: 'Swedish',
+  zh: 'Chinese',
+};
+
+const normalizeLangTag = (value?: string) => value?.trim().toLowerCase().split('-')[0] || undefined;
+
+const formatLanguageLabel = (lang: string) => LANGUAGE_LABELS[lang] || lang;
+
 export const SYSTEM_PROMPT = [
   '<instructions>',
   'You are Clarus, a helpful legal assistant. Be clear, concise, and avoid legal advice.',
@@ -19,6 +33,23 @@ export const SYSTEM_PROMPT = [
   '',
   'Do not call the tool for greetings or general chit-chat.',
 ].join('\n');
+
+export const buildSystemPrompt = (language?: string) => {
+  const normalized = normalizeLangTag(language);
+  if (!normalized) {
+    return SYSTEM_PROMPT;
+  }
+
+  const label = formatLanguageLabel(normalized);
+  return [
+    SYSTEM_PROMPT,
+    '',
+    '<language>',
+    `The user selected ${label}. Reply only in ${label}.`,
+    'Do not ask which language to use unless the user explicitly requests a change.',
+    '</language>',
+  ].join('\n');
+};
 
 export type ChatMessage = {
   role: 'user' | 'assistant';
@@ -53,7 +84,7 @@ type SearchContext = Parameters<typeof searchRagChunks>[0];
 
 export const createRagSearchTool = (
   ctx: SearchContext,
-  options?: { siteId?: string; limit?: number },
+  options?: { siteId?: string; limit?: number; targetLang?: string },
 ) =>
   tool({
     description: [
@@ -64,10 +95,11 @@ export const createRagSearchTool = (
     inputSchema: z.object({
       query_sv: z.string().optional().describe('Swedish search query'),
       query: z.string().optional().describe('Fallback query key for compatibility'),
+      target_lang: z.string().optional().describe('Target language for context translation'),
       site_id: z.string().optional().describe('Override site id'),
       limit: z.number().int().positive().optional().describe('Max results'),
     }),
-    execute: async ({ query_sv, query, site_id, limit }) => {
+    execute: async ({ query_sv, query, target_lang, site_id, limit }) => {
       const resolvedQuery = (query_sv?.trim() || query?.trim() || '').trim();
       if (!resolvedQuery) {
         return emptyRagResult();
@@ -75,12 +107,14 @@ export const createRagSearchTool = (
 
       const resolvedSiteId = site_id ?? options?.siteId;
       const resolvedLimit = limit ?? options?.limit;
+      const resolvedTargetLang = options?.targetLang?.trim() || target_lang?.trim() || undefined;
 
       try {
         const primary = await searchRagChunks(ctx, {
           query: resolvedQuery,
           site_id: resolvedSiteId,
           lang: 'sv',
+          target_lang: resolvedTargetLang,
           limit: resolvedLimit,
         });
 
@@ -91,6 +125,7 @@ export const createRagSearchTool = (
         return await searchRagChunks(ctx, {
           query: resolvedQuery,
           site_id: resolvedSiteId,
+          target_lang: resolvedTargetLang,
           limit: resolvedLimit,
         });
       } catch (error) {

@@ -3,7 +3,7 @@ import { action, internalMutation, internalQuery } from './_generated/server';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText, stepCountIs } from 'ai';
 import { v } from 'convex/values';
-import { buildChatMessages, createRagSearchTool, SYSTEM_PROMPT } from './chatRag';
+import { buildChatMessages, buildSystemPrompt, createRagSearchTool } from './chatRag';
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
@@ -139,11 +139,13 @@ export const sendMessage = action({
       headers: buildOpenRouterHeaders(),
     });
     const messages = buildChatMessages(message, args.history);
+    const ragLang = args.rag_lang?.trim() || undefined;
     const tools = isRagEnabled()
       ? {
           rag_search_sv: createRagSearchTool(ctx, {
             siteId: args.rag_site_id,
             limit: args.rag_limit ?? DEFAULT_RAG_LIMIT,
+            targetLang: ragLang,
           }),
         }
       : undefined;
@@ -158,7 +160,7 @@ export const sendMessage = action({
     try {
       const result = await generateText({
         model: openrouter.chat(resolveModel()),
-        system: SYSTEM_PROMPT,
+        system: buildSystemPrompt(ragLang),
         messages,
         tools,
         stopWhen: stepCountIs(isRagEnabled() ? 4 : 1),

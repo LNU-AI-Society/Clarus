@@ -1,11 +1,12 @@
 import { internal } from './_generated/api';
 import { action, internalQuery } from './_generated/server';
 import { createOpenAI } from '@ai-sdk/openai';
-import { embed } from 'ai';
+import { embed, generateText } from 'ai';
 import { v } from 'convex/values';
 
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const DEFAULT_EMBEDDING_MODEL = 'openai/text-embedding-3-small';
+const DEFAULT_TRANSLATION_MODEL = 'openai/gpt-4o-mini';
 const DEFAULT_SITE_ID = 'migrationsverket';
 const EXPECTED_EMBEDDING_DIMENSIONS = 1536;
 const DEFAULT_LIMIT = 6;
@@ -13,6 +14,16 @@ const MAX_LIMIT = 12;
 const MAX_CANDIDATES = 256;
 const MAX_CONTEXT_CHARS = 9000;
 const SNIPPET_MAX_CHARS = 280;
+
+const LANGUAGE_NAME_MAP: Record<string, string> = {
+  de: 'German',
+  en: 'English',
+  es: 'Spanish',
+  fi: 'Finnish',
+  nl: 'Dutch',
+  sv: 'Swedish',
+  zh: 'Chinese',
+};
 
 const env =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
@@ -51,6 +62,7 @@ interface SearchRagArgs {
   query: string;
   site_id?: string;
   lang?: string;
+  target_lang?: string;
   limit?: number;
   embedding_model?: string;
 }
@@ -104,8 +116,22 @@ function resolveEmbeddingModel(explicitModel?: string): string {
   return readEnv('OPENROUTER_EMBEDDING_MODEL') || DEFAULT_EMBEDDING_MODEL;
 }
 
+function resolveTranslationModel(): string {
+  return readEnv('OPENROUTER_TRANSLATION_MODEL') || readEnv('OPENROUTER_MODEL') || DEFAULT_TRANSLATION_MODEL;
+}
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
+}
+
+function normalizeLangTag(value?: string | null): string | null {
+  const trimmed = value?.trim().toLowerCase();
+  if (!trimmed) return null;
+  return trimmed.split('-')[0] || null;
+}
+
+function formatLanguageLabel(lang: string): string {
+  return LANGUAGE_NAME_MAP[lang] || lang;
 }
 
 function normalizeQuery(value: unknown): string {
@@ -128,6 +154,38 @@ function normalizeLimit(input?: number): number {
   return Math.max(1, Math.min(MAX_LIMIT, floored));
 }
 
+async function translateText(
+  openrouter: ReturnType<typeof createOpenAI>,
+  model: string,
+  text: string,
+  targetLang: string,
+): Promise<string | null> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const languageLabel = formatLanguageLabel(targetLang);
+  const system = [
+    'You are a translation engine.',
+    `Translate the input to ${languageLabel}.`,
+    'Preserve legal terminology, names, numbers, and URLs.',
+    'Return only the translated text with no commentary.',
+  ].join(' ');
+
+  try {
+    const result = await generateText({
+      model: openrouter.chat(model),
+      system,
+      prompt: trimmed,
+    });
+    return result.text?.trim() || null;
+  } catch (error) {
+    console.warn('RAG translation failed', error);
+    return null;
+  }
+}
+
 function emptyResult(embeddingModel: string): RagSearchResult {
   return {
     context: '',
@@ -145,6 +203,8 @@ export async function searchRagChunks(
   const query = normalizeQuery(args.query);
   const siteId = resolveSiteId(args.site_id);
   const embeddingModel = resolveEmbeddingModel(args.embedding_model);
+  const filterLang = normalizeLangTag(args.lang);
+  const targetLang = normalizeLangTag(args.target_lang);
 
   if (!query || !siteId) {
     return emptyResult(embeddingModel);
@@ -156,7 +216,11 @@ export async function searchRagChunks(
   }
 
   const baseURL = readEnv('OPENROUTER_BASE_URL') || DEFAULT_OPENROUTER_BASE_URL;
-  const openrouter = createOpenAI({ apiKey, baseURL });
+  const openrouter = createOpenAI({
+    apiKey,
+    baseURL,
+    headers: buildOpenRouterHeaders(),
+  });
   const { embedding } = await embed({
     model: openrouter.embedding(embeddingModel),
     value: query,
@@ -199,7 +263,6 @@ export async function searchRagChunks(
   })) as RagChunkSummary[];
 
   const byId = new Map(chunkRows.map((chunk) => [chunk.id, chunk]));
-  const normalizedLang = args.lang?.trim();
   const selected: RagChunkSummary[] = [];
   const seenContent = new Set<string>();
 
@@ -211,7 +274,8 @@ export async function searchRagChunks(
     if (chunk.embedding_model !== embeddingModel) {
       continue;
     }
-    if (normalizedLang && chunk.lang !== normalizedLang) {
+    const chunkLang = normalizeLangTag(chunk.lang);
+    if (filterLang && chunkLang !== filterLang) {
       continue;
     }
     if (seenContent.has(chunk.content_hash)) {
@@ -233,18 +297,65 @@ export async function searchRagChunks(
     };
   }
 
+  const translationModel = targetLang ? resolveTranslationModel() : null;
+  const contextChunks: Array<{
+    chunk: RagChunkSummary;
+    context_title: string;
+    context_text: string;
+  }> = [];
+
+  for (const chunk of selected) {
+    if (!targetLang || !translationModel) {
+      contextChunks.push({
+        chunk,
+        context_title: chunk.title,
+        context_text: chunk.chunk_text,
+      });
+      continue;
+    }
+
+    const chunkLang = normalizeLangTag(chunk.lang);
+    if (chunkLang && chunkLang === targetLang) {
+      contextChunks.push({
+        chunk,
+        context_title: chunk.title,
+        context_text: chunk.chunk_text,
+      });
+      continue;
+    }
+
+    const translatedTitle = await translateText(openrouter, translationModel, chunk.title, targetLang);
+    const translatedText = await translateText(openrouter, translationModel, chunk.chunk_text, targetLang);
+    if (!translatedTitle || !translatedText) {
+      continue;
+    }
+
+    contextChunks.push({
+      chunk,
+      context_title: translatedTitle,
+      context_text: translatedText,
+    });
+  }
+
+  if (contextChunks.length === 0) {
+    return {
+      ...emptyResult(embeddingModel),
+      total_candidates: vectorHits.length,
+    };
+  }
+
   const citations: RagCitation[] = [];
   const sections: string[] = [];
   let usedChars = 0;
 
-  for (const chunk of selected) {
-    const cleanText = normalizeWhitespace(chunk.chunk_text);
+  for (const { chunk, context_title, context_text } of contextChunks) {
+    const cleanText = normalizeWhitespace(context_text);
     if (!cleanText) {
       continue;
     }
 
     const sourceIndex = citations.length + 1;
-    const header = `[${sourceIndex}] ${chunk.title}\nURL: ${chunk.url}\n`;
+    const header = `[${sourceIndex}] ${context_title}\nURL: ${chunk.url}\n`;
     const remaining = MAX_CONTEXT_CHARS - usedChars - header.length;
     if (remaining <= 120) {
       break;
@@ -261,7 +372,7 @@ export async function searchRagChunks(
 
     citations.push({
       id: chunk.chunk_id,
-      title: chunk.title,
+      title: context_title,
       url: chunk.url,
       snippet: buildSnippet(cleanText),
       source_type: 'web',
@@ -282,6 +393,7 @@ export const searchChunks = action({
     query: v.string(),
     site_id: v.optional(v.string()),
     lang: v.optional(v.string()),
+    target_lang: v.optional(v.string()),
     limit: v.optional(v.number()),
     embedding_model: v.optional(v.string()),
   },
