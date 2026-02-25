@@ -2,18 +2,7 @@ import { Menu } from '@base-ui/react';
 import { T, useTolgee } from '@tolgee/react';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-
-const languageStorageKey = 'clarus.language';
-
-const languages = [
-  { code: 'en', shortLabel: 'EN', labelKey: 'languageSwitch.english', flag: '🇬🇧' },
-  { code: 'de', shortLabel: 'DE', labelKey: 'languageSwitch.german', flag: '🇩🇪' },
-  { code: 'es', shortLabel: 'ES', labelKey: 'languageSwitch.spanish', flag: '🇪🇸' },
-  { code: 'fi', shortLabel: 'FI', labelKey: 'languageSwitch.finnish', flag: '🇫🇮' },
-  { code: 'nl', shortLabel: 'NL', labelKey: 'languageSwitch.dutch', flag: '🇳🇱' },
-  { code: 'sv', shortLabel: 'SV', labelKey: 'languageSwitch.swedish', flag: '🇸🇪' },
-  { code: 'zh', shortLabel: 'ZH', labelKey: 'languageSwitch.mandarin', flag: '🇨🇳' },
-];
+import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/languages';
 
 type LanguageSwitchProps = {
   className?: string;
@@ -21,9 +10,9 @@ type LanguageSwitchProps = {
 
 const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
   const tolgee = useTolgee(['language']);
-  const currentLanguage = tolgee.getLanguage() ?? 'en';
+  const currentLanguage = tolgee.getLanguage() ?? DEFAULT_LANGUAGE;
   const current = useMemo(
-    () => languages.find((language) => language.code === currentLanguage) ?? languages[0],
+    () => SUPPORTED_LANGUAGES.find((language) => language.code === currentLanguage) ?? SUPPORTED_LANGUAGES[0],
     [currentLanguage],
   );
 
@@ -36,7 +25,7 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
   const handleChange = (language: string) => {
     if (language === currentLanguage) return;
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(languageStorageKey, language);
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     }
     void tolgee.changeLanguage(language);
   };
@@ -58,7 +47,7 @@ const LanguageSwitch = ({ className }: LanguageSwitchProps) => {
         <Menu.Portal>
           <Menu.Positioner>
             <Menu.Popup className="border-border/80 bg-surface/95 text-ink shadow-popover absolute top-full right-0 z-20 mt-2 w-52 rounded-2xl border p-2 text-sm backdrop-blur-sm transition-all duration-150 data-[state=open]:translate-y-0 data-[state=open]:opacity-100 data-[state=closed]:pointer-events-none data-[state=closed]:translate-y-1 data-[state=closed]:opacity-0">
-              {languages.map((language) => {
+              {SUPPORTED_LANGUAGES.map((language) => {
                 const isActive = currentLanguage === language.code;
                 return (
                   <Menu.Item

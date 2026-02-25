@@ -3,6 +3,7 @@ import { action, internalQuery } from './_generated/server';
 import { createOpenAI } from '@ai-sdk/openai';
 import { embed, generateText } from 'ai';
 import { v } from 'convex/values';
+import { getLanguageLabel, normalizeLanguageTag } from '../src/i18n/languages';
 
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const DEFAULT_EMBEDDING_MODEL = 'openai/text-embedding-3-small';
@@ -14,16 +15,6 @@ const MAX_LIMIT = 12;
 const MAX_CANDIDATES = 256;
 const MAX_CONTEXT_CHARS = 9000;
 const SNIPPET_MAX_CHARS = 280;
-
-const LANGUAGE_NAME_MAP: Record<string, string> = {
-  de: 'German',
-  en: 'English',
-  es: 'Spanish',
-  fi: 'Finnish',
-  nl: 'Dutch',
-  sv: 'Swedish',
-  zh: 'Chinese',
-};
 
 const env =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
@@ -124,16 +115,6 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
-function normalizeLangTag(value?: string | null): string | null {
-  const trimmed = value?.trim().toLowerCase();
-  if (!trimmed) return null;
-  return trimmed.split('-')[0] || null;
-}
-
-function formatLanguageLabel(lang: string): string {
-  return LANGUAGE_NAME_MAP[lang] || lang;
-}
-
 function normalizeQuery(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -165,7 +146,7 @@ async function translateText(
     return null;
   }
 
-  const languageLabel = formatLanguageLabel(targetLang);
+  const languageLabel = getLanguageLabel(targetLang);
   const system = [
     'You are a translation engine.',
     `Translate the input to ${languageLabel}.`,
@@ -203,8 +184,8 @@ export async function searchRagChunks(
   const query = normalizeQuery(args.query);
   const siteId = resolveSiteId(args.site_id);
   const embeddingModel = resolveEmbeddingModel(args.embedding_model);
-  const filterLang = normalizeLangTag(args.lang);
-  const targetLang = normalizeLangTag(args.target_lang);
+  const filterLang = normalizeLanguageTag(args.lang);
+  const targetLang = normalizeLanguageTag(args.target_lang);
 
   if (!query || !siteId) {
     return emptyResult(embeddingModel);
@@ -274,7 +255,7 @@ export async function searchRagChunks(
     if (chunk.embedding_model !== embeddingModel) {
       continue;
     }
-    const chunkLang = normalizeLangTag(chunk.lang);
+    const chunkLang = normalizeLanguageTag(chunk.lang);
     if (filterLang && chunkLang !== filterLang) {
       continue;
     }
@@ -314,7 +295,7 @@ export async function searchRagChunks(
       continue;
     }
 
-    const chunkLang = normalizeLangTag(chunk.lang);
+    const chunkLang = normalizeLanguageTag(chunk.lang);
     if (chunkLang && chunkLang === targetLang) {
       contextChunks.push({
         chunk,

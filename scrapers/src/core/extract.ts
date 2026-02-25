@@ -16,6 +16,22 @@ export function isHtmlResponse(contentType: NullableString, body: string): boole
   return snippet.includes('<html') || snippet.includes('<!doctype html');
 }
 
+export function isPdfResponse(contentType: NullableString, url: string, bodyBuffer?: Buffer): boolean {
+  if (contentType && contentType.toLowerCase().includes('application/pdf')) {
+    return true;
+  }
+
+  if (url.toLowerCase().endsWith('.pdf')) {
+    return true;
+  }
+
+  if (bodyBuffer && bodyBuffer.length >= 4) {
+    return bodyBuffer[0] === 0x25 && bodyBuffer[1] === 0x50 && bodyBuffer[2] === 0x44 && bodyBuffer[3] === 0x46;
+  }
+
+  return false;
+}
+
 export function extractContentFromHtml(html: string, pageUrl: string): ExtractedContent {
   const dom = new JSDOM(html, { url: pageUrl });
 

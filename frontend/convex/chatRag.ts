@@ -1,21 +1,9 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { RagSearchResult, searchRagChunks } from './ragSearch';
+import { getLanguageLabel, normalizeLanguageTag } from '../src/i18n/languages';
 
 //System prompt for teh chat mode.
-const LANGUAGE_LABELS: Record<string, string> = {
-  de: 'German',
-  en: 'English',
-  es: 'Spanish',
-  fi: 'Finnish',
-  nl: 'Dutch',
-  sv: 'Swedish',
-  zh: 'Chinese',
-};
-
-const normalizeLangTag = (value?: string) => value?.trim().toLowerCase().split('-')[0] || undefined;
-
-const formatLanguageLabel = (lang: string) => LANGUAGE_LABELS[lang] || lang;
 
 export const SYSTEM_PROMPT = [
   '<instructions>',
@@ -35,12 +23,12 @@ export const SYSTEM_PROMPT = [
 ].join('\n');
 
 export const buildSystemPrompt = (language?: string) => {
-  const normalized = normalizeLangTag(language);
+  const normalized = normalizeLanguageTag(language);
   if (!normalized) {
     return SYSTEM_PROMPT;
   }
 
-  const label = formatLanguageLabel(normalized);
+  const label = getLanguageLabel(normalized);
   return [
     SYSTEM_PROMPT,
     '',

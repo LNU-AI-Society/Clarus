@@ -6,31 +6,22 @@ import fi from './i18n/fi.json';
 import nl from './i18n/nl.json';
 import sv from './i18n/sv.json';
 import zh from './i18n/zh.json';
-
-const languageStorageKey = 'clarus.language';
+import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, normalizeSupportedLanguage } from './i18n/languages';
 
 const getInitialLanguage = () => {
   if (typeof window === 'undefined') {
-    return 'en';
+    return DEFAULT_LANGUAGE;
   }
 
-  const storedLanguage = window.localStorage.getItem(languageStorageKey);
-  return storedLanguage === 'sv' ||
-    storedLanguage === 'en' ||
-    storedLanguage === 'de' ||
-    storedLanguage === 'es' ||
-    storedLanguage === 'fi' ||
-    storedLanguage === 'nl' ||
-    storedLanguage === 'zh'
-    ? storedLanguage
-    : 'en';
+  const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return normalizeSupportedLanguage(storedLanguage) ?? DEFAULT_LANGUAGE;
 };
 
 export const tolgee = Tolgee()
   .use(FormatSimple())
   .init({
     language: getInitialLanguage(),
-    fallbackLanguage: 'en',
+    fallbackLanguage: DEFAULT_LANGUAGE,
     staticData: {
       de,
       en,

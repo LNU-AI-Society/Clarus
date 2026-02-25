@@ -1,7 +1,9 @@
+import { lagenSite } from './lagen.js';
 import { migrationsverketSite } from './migrationsverket.js';
 import type { SiteDefinition } from '../core/types.js';
 
 export const siteRegistry = {
+  lagen: lagenSite,
   migrationsverket: migrationsverketSite,
 } as const;
 
