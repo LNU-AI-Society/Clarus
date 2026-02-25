@@ -1,5 +1,5 @@
 import { internal } from './_generated/api';
-import { action, internalMutation } from './_generated/server';
+import { action, internalMutation, internalQuery } from './_generated/server';
 import { createOpenAI } from '@ai-sdk/openai';
 import { embedMany } from 'ai';
 import { v } from 'convex/values';
@@ -8,6 +8,7 @@ const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const DEFAULT_EMBEDDING_MODEL = 'openai/text-embedding-3-small';
 const EXPECTED_EMBEDDING_DIMENSIONS = 1536;
 const MAX_CHUNKS_PER_BATCH = 24;
+const FINALIZE_PAGE_SIZE = 100;
 
 const env =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
@@ -90,6 +91,8 @@ const internalApi = internal as unknown as {
   ragIngest: {
     upsertEmbeddedChunkBatchInternal: unknown;
     deactivateStaleChunksInternal: unknown;
+    getActiveChunksPageInternal: unknown;
+    deactivateChunksInternal: unknown;
   };
 };
 
@@ -177,6 +180,7 @@ export const finalizeIngestionRun = action({
     run_id: v.string(),
     site_id: v.string(),
     embedding_model: v.optional(v.string()),
+    cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     assertIngestionAuthorized(args.auth_token);
@@ -184,15 +188,40 @@ export const finalizeIngestionRun = action({
       mutation: unknown,
       args: Record<string, unknown>,
     ) => Promise<unknown>;
+    const runQuery = ctx.runQuery as (
+      query: unknown,
+      args: Record<string, unknown>,
+    ) => Promise<unknown>;
 
     const embeddingModel = resolveEmbeddingModel(args.embedding_model);
-    return (await runMutation(internalApi.ragIngest.deactivateStaleChunksInternal, {
-      run_id: args.run_id,
+    const page = (await runQuery(internalApi.ragIngest.getActiveChunksPageInternal, {
       site_id: args.site_id,
       embedding_model: embeddingModel,
+      cursor: args.cursor,
+      page_size: FINALIZE_PAGE_SIZE,
     })) as {
-      deactivated_chunks: number;
-      active_chunks: number;
+      entries: Array<{ id: string; last_seen_run_id: string }>;
+      continue_cursor: string | null;
+      is_done: boolean;
+    };
+
+    const idsToDeactivate = page.entries
+      .filter((entry) => entry.last_seen_run_id !== args.run_id)
+      .map((entry) => entry.id);
+
+    let deactivatedChunks = 0;
+    if (idsToDeactivate.length > 0) {
+      const mutationResult = (await runMutation(internalApi.ragIngest.deactivateChunksInternal, {
+        ids: idsToDeactivate,
+      })) as { deactivated_chunks: number };
+      deactivatedChunks = mutationResult.deactivated_chunks;
+    }
+
+    return {
+      deactivated_chunks: deactivatedChunks,
+      active_chunks: null as number | null,
+      continue_cursor: page.continue_cursor,
+      is_done: page.is_done,
     };
   },
 });
@@ -314,6 +343,65 @@ export const deactivateStaleChunksInternal = internalMutation({
     return {
       deactivated_chunks: deactivatedChunks,
       active_chunks: activeChunks.length - deactivatedChunks,
+    };
+  },
+});
+
+export const getActiveChunksPageInternal = internalQuery({
+  args: {
+    site_id: v.string(),
+    embedding_model: v.string(),
+    cursor: v.optional(v.string()),
+    page_size: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query('ragChunks')
+      .withIndex('by_site_model_active', (q) =>
+        q
+          .eq('site_id', args.site_id)
+          .eq('embedding_model', args.embedding_model)
+          .eq('is_active', true),
+      )
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: Math.max(1, args.page_size),
+      });
+
+    return {
+      entries: page.page.map((chunk) => ({
+        id: chunk._id,
+        last_seen_run_id: chunk.last_seen_run_id,
+      })),
+      continue_cursor: page.continueCursor ?? null,
+      is_done: page.isDone,
+    };
+  },
+});
+
+export const deactivateChunksInternal = internalMutation({
+  args: {
+    ids: v.array(v.id('ragChunks')),
+  },
+  handler: async (ctx, args) => {
+    let deactivatedChunks = 0;
+    const now = Date.now();
+
+    for (const id of args.ids) {
+      const chunk = await ctx.db.get(id);
+      if (!chunk || !chunk.is_active) {
+        continue;
+      }
+
+      await ctx.db.patch(id, {
+        is_active: false,
+        updated_at: now,
+      });
+      deactivatedChunks += 1;
+    }
+
+    return {
+      deactivated_chunks: deactivatedChunks,
     };
   },
 });

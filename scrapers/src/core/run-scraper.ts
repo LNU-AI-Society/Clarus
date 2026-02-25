@@ -5,7 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chunkTextByWords } from './chunking.js';
-import { extractContentFromHtml, isHtmlResponse } from './extract.js';
+import { extractContentFromHtml, isHtmlResponse, isPdfResponse } from './extract.js';
+import { extractLinksFromHtml } from './links.js';
 import { fetchTextWithRetries } from './http.js';
 import { closeWriteStream, writeJsonlLine } from './io.js';
 import { collectSitemapPages, extractSitemapUrls } from './sitemap.js';
@@ -19,6 +20,7 @@ import type {
   RunManifest,
   RunStats,
   RuntimeOptions,
+  SitemapMeta,
   SiteDefinition,
 } from './types.js';
 
@@ -69,6 +71,7 @@ export async function runSiteScraper(site: SiteDefinition, options: RuntimeOptio
     skipped_short_content: 0,
     skipped_duplicate_content: 0,
     skipped_extract_error: 0,
+    skipped_content_filter: 0,
   };
 
   const startedAt = new Date().toISOString();
@@ -90,44 +93,74 @@ export async function runSiteScraper(site: SiteDefinition, options: RuntimeOptio
 
     const robotsSitemaps = extractSitemapUrls(robotsResponse.body);
     const fallbackSitemaps = robots.getSitemaps?.() || [];
-    const sitemapUrls = Array.from(new Set([...robotsSitemaps, ...fallbackSitemaps]));
-
-    if (sitemapUrls.length === 0) {
-      throw new Error('No Sitemap entries found in robots.txt');
-    }
+    const explicitSitemaps = site.sitemapUrls || [];
+    const sitemapUrls = Array.from(new Set([...robotsSitemaps, ...fallbackSitemaps, ...explicitSitemaps]));
 
     stats.sitemap_urls_discovered = sitemapUrls.length;
-    process.stdout.write(`[robots] sitemap entries: ${sitemapUrls.length}\n`);
+    if (sitemapUrls.length > 0) {
+      process.stdout.write(`[robots] sitemap entries: ${sitemapUrls.length}\n`);
+    } else {
+      process.stdout.write('[robots] no sitemap entries found\n');
+    }
 
-    const sitemapPages = await collectSitemapPages({
-      sitemapUrls,
-      requestOptions: {
-        userAgent: options.userAgent,
-        timeoutMs: options.timeoutMs,
-        retries: options.retries,
-      },
-      delayMs: options.delayMs,
-      canonicalizeUrl: site.canonicalizeUrl,
-      log: (message) => process.stdout.write(`${message}\n`),
-    });
+    let sitemapPages = new Map<string, SitemapMeta>();
+    if (sitemapUrls.length > 0) {
+      sitemapPages = await collectSitemapPages({
+        sitemapUrls,
+        requestOptions: {
+          userAgent: options.userAgent,
+          timeoutMs: options.timeoutMs,
+          retries: options.retries,
+        },
+        delayMs: options.delayMs,
+        canonicalizeUrl: site.canonicalizeUrl,
+        log: (message) => process.stdout.write(`${message}\n`),
+      });
+    }
 
     stats.sitemap_pages_discovered = sitemapPages.size;
-    process.stdout.write(`[sitemap] page URLs discovered: ${sitemapPages.size}\n`);
+    if (sitemapUrls.length > 0) {
+      process.stdout.write(`[sitemap] page URLs discovered: ${sitemapPages.size}\n`);
+    }
+
+    const seedUrls =
+      site.seedUrls && site.seedUrls.length > 0
+        ? site.seedUrls
+        : site.crawlLinks
+          ? [options.baseUrl]
+          : [];
+
+    if (sitemapUrls.length === 0 && seedUrls.length === 0) {
+      throw new Error('No sitemap entries found and no seed URLs provided.');
+    }
 
     const candidates: Array<{ url: string; lastmod: string | null; changefreq: string | null; priority: string | null }> = [];
+    const candidateSet = new Set<string>();
+
+    const enqueueCandidate = (url: string, meta: SitemapMeta): void => {
+      if (candidateSet.has(url)) return;
+      if (options.maxPages > 0 && candidates.length >= options.maxPages) return;
+      candidateSet.add(url);
+      candidates.push({ url, ...meta });
+      stats.candidate_pages_after_filters = candidates.length;
+    };
 
     for (const [url, meta] of sitemapPages.entries()) {
       const parsed = new URL(url);
       if (site.shouldSkipPath(parsed.pathname)) continue;
       if (!isAllowedByRobots(robots, url, options.userAgent)) continue;
-      candidates.push({ url, ...meta });
+      enqueueCandidate(url, meta);
     }
 
-    if (options.maxPages > 0) {
-      candidates.splice(options.maxPages);
+    for (const seedUrl of seedUrls) {
+      const canonical = site.canonicalizeUrl(seedUrl);
+      if (!canonical) continue;
+      const parsed = new URL(canonical);
+      if (site.shouldSkipPath(parsed.pathname)) continue;
+      if (!isAllowedByRobots(robots, canonical, options.userAgent)) continue;
+      enqueueCandidate(canonical, { lastmod: null, changefreq: null, priority: null });
     }
 
-    stats.candidate_pages_after_filters = candidates.length;
     process.stdout.write(`[filter] candidate pages: ${candidates.length}\n`);
 
     const seenContentHashes = new Set<string>();
@@ -175,15 +208,43 @@ export async function runSiteScraper(site: SiteDefinition, options: RuntimeOptio
         continue;
       }
 
-      if (!isHtmlResponse(pageResponse.contentType, pageResponse.body)) {
+      const isHtml = isHtmlResponse(pageResponse.contentType, pageResponse.body);
+      const isPdf =
+        !isHtml &&
+        Boolean(site.extractPdfContent) &&
+        isPdfResponse(pageResponse.contentType, finalCanonicalUrl, pageResponse.bodyBuffer);
+
+      if (!isHtml && !isPdf) {
         stats.skipped_non_html += 1;
         continue;
       }
 
-      const extractor = site.extractContent || extractContentFromHtml;
+      if (isHtml && site.crawlLinks) {
+        try {
+          const discovered = extractLinksFromHtml(pageResponse.body, finalCanonicalUrl);
+          for (const link of discovered) {
+            const canonical = site.canonicalizeUrl(link);
+            if (!canonical) continue;
+            const parsed = new URL(canonical);
+            if (site.shouldSkipPath(parsed.pathname)) continue;
+            if (!isAllowedByRobots(robots, canonical, options.userAgent)) continue;
+            enqueueCandidate(canonical, { lastmod: null, changefreq: null, priority: null });
+          }
+        } catch (error: unknown) {
+          process.stdout.write(`  -> link extract error: ${String(error)}\n`);
+        }
+      }
+
+      const extractor = isHtml ? site.extractContent || extractContentFromHtml : site.extractPdfContent;
       let extracted: ExtractedContent;
       try {
-        extracted = extractor(pageResponse.body, finalCanonicalUrl);
+        if (!extractor) {
+          stats.skipped_non_html += 1;
+          continue;
+        }
+        extracted = isHtml
+          ? await extractor(pageResponse.body, finalCanonicalUrl)
+          : await extractor(pageResponse.bodyBuffer, finalCanonicalUrl, pageResponse.contentType);
       } catch (error: unknown) {
         stats.skipped_extract_error += 1;
         process.stdout.write(`  -> extract error: ${String(error)}\n`);
@@ -192,6 +253,11 @@ export async function runSiteScraper(site: SiteDefinition, options: RuntimeOptio
 
       if (extracted.content.length < options.minContentChars) {
         stats.skipped_short_content += 1;
+        continue;
+      }
+
+      if (site.filterContent && !site.filterContent(extracted, finalCanonicalUrl)) {
+        stats.skipped_content_filter += 1;
         continue;
       }
 
@@ -208,9 +274,14 @@ export async function runSiteScraper(site: SiteDefinition, options: RuntimeOptio
 
       let rawHtmlFile: string | null = null;
       if (options.saveRawHtml) {
-        rawHtmlFile = path.join('raw_html', `${docId}.html`);
+        const extension = isPdf ? '.pdf' : '.html';
+        rawHtmlFile = path.join('raw_html', `${docId}${extension}`);
         const rawHtmlPath = path.join(outputDir, rawHtmlFile);
-        await fs.writeFile(rawHtmlPath, pageResponse.body, 'utf8');
+        if (isPdf) {
+          await fs.writeFile(rawHtmlPath, pageResponse.bodyBuffer);
+        } else {
+          await fs.writeFile(rawHtmlPath, pageResponse.body, 'utf8');
+        }
       }
 
       const documentRecord: DocumentRecord = {

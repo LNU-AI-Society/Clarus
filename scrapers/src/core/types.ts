@@ -18,6 +18,7 @@ export interface RuntimeOptions {
 export interface FetchTextResult {
   status: number;
   body: string;
+  bodyBuffer: Buffer;
   finalUrl: string;
   contentType: NullableString;
 }
@@ -56,6 +57,7 @@ export interface RunStats {
   skipped_short_content: number;
   skipped_duplicate_content: number;
   skipped_extract_error: number;
+  skipped_content_filter: number;
 }
 
 export interface DocumentRecord {
@@ -105,9 +107,18 @@ export interface SiteDefinition {
   robotsUrl: string;
   outputDirectoryName: string;
   defaultUserAgent: string;
+  sitemapUrls?: string[];
+  seedUrls?: string[];
+  crawlLinks?: boolean;
   canonicalizeUrl: (rawUrl: string) => NullableString;
   shouldSkipPath: (pathname: string) => boolean;
-  extractContent?: (html: string, pageUrl: string) => ExtractedContent;
+  extractContent?: (html: string, pageUrl: string) => ExtractedContent | Promise<ExtractedContent>;
+  extractPdfContent?: (
+    data: Buffer,
+    pageUrl: string,
+    contentType: NullableString,
+  ) => ExtractedContent | Promise<ExtractedContent>;
+  filterContent?: (content: ExtractedContent, pageUrl: string) => boolean;
 }
 
 export interface RunManifest {

@@ -49,7 +49,9 @@ interface IngestBatchResult {
 
 interface FinalizeResult {
   deactivated_chunks: number;
-  active_chunks: number;
+  active_chunks: number | null;
+  continue_cursor?: string | null;
+  is_done?: boolean;
 }
 
 interface IngestionReport {
@@ -438,19 +440,33 @@ async function main(): Promise<void> {
 
   if (options.finalizeRun) {
     process.stdout.write("[finalize] deactivating stale chunks\n");
-    const finalizeResult = await callActionWithRetry<FinalizeResult>(
-      client,
-      "ragIngest:finalizeIngestionRun",
-      {
-        auth_token: options.ingestToken,
-        run_id: inputs.runId,
-        site_id: inputs.siteId,
-        embedding_model: options.embeddingModel || undefined,
-      },
-    );
+    let continueCursor: string | null | undefined = null;
+    let finalizeDone = false;
 
-    stats.deactivatedChunks = finalizeResult.deactivated_chunks;
-    stats.activeChunksAfterFinalize = finalizeResult.active_chunks;
+    while (!finalizeDone) {
+      const finalizeResult = await callActionWithRetry<FinalizeResult>(
+        client,
+        "ragIngest:finalizeIngestionRun",
+        {
+          auth_token: options.ingestToken,
+          run_id: inputs.runId,
+          site_id: inputs.siteId,
+          embedding_model: options.embeddingModel || undefined,
+          cursor: continueCursor || undefined,
+        },
+      );
+
+      stats.deactivatedChunks += finalizeResult.deactivated_chunks;
+      if (typeof finalizeResult.active_chunks === "number") {
+        stats.activeChunksAfterFinalize = finalizeResult.active_chunks;
+      }
+
+      continueCursor = finalizeResult.continue_cursor;
+      finalizeDone = finalizeResult.is_done ?? !continueCursor;
+      if (!finalizeDone) {
+        process.stdout.write("[finalize] continuing...\n");
+      }
+    }
   }
 
   const finishedAt = new Date().toISOString();

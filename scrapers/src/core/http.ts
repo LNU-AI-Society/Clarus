@@ -24,7 +24,7 @@ export async function fetchTextWithRetries(
         method: 'GET',
         headers: {
           'User-Agent': options.userAgent,
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.7',
         },
         redirect: 'follow',
         signal: controller.signal,
@@ -49,6 +49,7 @@ export async function fetchTextWithRetries(
       const result: FetchTextResult = {
         status: response.status,
         body: bodyBuffer.toString('utf8'),
+        bodyBuffer,
         finalUrl: response.url || url,
         contentType,
       };

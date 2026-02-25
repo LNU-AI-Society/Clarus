@@ -5,7 +5,8 @@ import ChatWindow from '../components/chat/ChatWindow';
 import FileUploadArea from '../components/chat/FileUploadArea';
 import { Message } from '../components/chat/types';
 import { api } from '../lib/convexApi';
-import { T, useTranslate } from '@tolgee/react';
+import { T, useTolgee, useTranslate } from '@tolgee/react';
+import { DEFAULT_LANGUAGE, normalizeSupportedLanguage } from '../i18n/languages';
 import { useAction } from 'convex/react';
 import { Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -24,6 +25,7 @@ const resolveChatEndpoint = () => {
 
 const ChatPage = () => {
   const { t } = useTranslate();
+  const tolgee = useTolgee(['language']);
   const { getToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -33,6 +35,7 @@ const ChatPage = () => {
   const analyzeDocument = useAction(api.documents.analyzeDocument);
   const chatEndpoint = resolveChatEndpoint();
   const isEmpty = messages.length === 0;
+  const currentLanguage = normalizeSupportedLanguage(tolgee.getLanguage()) ?? DEFAULT_LANGUAGE;
   const suggestedQuestionKeys = [
     'chat.suggested.q1',
     'chat.suggested.q2',
@@ -77,6 +80,7 @@ const ChatPage = () => {
         body: JSON.stringify({
           message: userMsg.text,
           history,
+          rag_lang: currentLanguage,
         }),
       });
 

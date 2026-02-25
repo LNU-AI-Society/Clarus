@@ -2,7 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { stepCountIs, streamText } from 'ai';
 import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
-import { buildChatMessages, createRagSearchTool, SYSTEM_PROMPT } from './chatRag';
+import { buildChatMessages, buildSystemPrompt, createRagSearchTool } from './chatRag';
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
@@ -37,6 +37,7 @@ type ChatRequestBody = {
   message?: unknown;
   history?: unknown;
   rag_site_id?: unknown;
+  rag_lang?: unknown;
   rag_limit?: unknown;
 };
 
@@ -100,6 +101,7 @@ const postHandler = httpAction(async (ctx, request) => {
     ? body.history.filter(isHistoryMessage)
     : undefined;
   const ragSiteId = typeof body?.rag_site_id === 'string' ? body.rag_site_id : undefined;
+  const ragLang = typeof body?.rag_lang === 'string' ? body.rag_lang : undefined;
   const ragLimit = typeof body?.rag_limit === 'number' ? body.rag_limit : undefined;
 
   try {
@@ -112,17 +114,18 @@ const postHandler = httpAction(async (ctx, request) => {
     });
     const messages = buildChatMessages(message, history);
     const tools = isRagEnabled()
-      ? {
-          rag_search_sv: createRagSearchTool(ctx, {
-            siteId: ragSiteId,
-            limit: ragLimit ?? DEFAULT_RAG_LIMIT,
-          }),
-        }
-      : undefined;
+        ? {
+            rag_search_sv: createRagSearchTool(ctx, {
+              siteId: ragSiteId,
+              limit: ragLimit ?? DEFAULT_RAG_LIMIT,
+              targetLang: ragLang,
+            }),
+          }
+        : undefined;
     let citations: Citation[] = [];
     const result = streamText({
       model: openrouter.chat(resolveModel()),
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(ragLang),
       messages,
       tools,
       stopWhen: stepCountIs(isRagEnabled() ? 4 : 1),

@@ -1,7 +1,7 @@
 # Known issues (solve later)
 
 - The cleanup for the ingestion into the vector table is kinda broken, duplicates could occur
-- Currently only migrationsverket is scraped, more websites are needed
+- Currently only migrationsverket and lagen.nu are scraped, more websites are needed
 - Currently all languages are scraped and ingested, we might wanna change this to optimize it down the line
 
 # Scrapers
@@ -16,6 +16,8 @@ Core modules live in `src/core/`:
 
 - `cli.ts` - shared CLI parsing and help output
 - `http.ts` - retried fetching + gzip handling
+- `links.ts` - link extraction for crawl discovery
+- `pdf.ts` - PDF text extraction helper
 - `sitemap.ts` - robots sitemap extraction and recursive sitemap crawling
 - `extract.ts` - default HTML extraction (Readability + JSDOM)
 - `chunking.ts` - word-based chunking
@@ -50,7 +52,17 @@ cd scrapers
 npm run scrape -- --site migrationsverket
 ```
 
+```bash
+cd scrapers
+npm run scrape -- --site lagen
+```
+
 Site-specific shortcut:
+
+```bash
+cd scrapers
+npm run scrape:lagen
+```
 
 ```bash
 cd scrapers
@@ -98,7 +110,7 @@ By default, each run writes into a timestamped directory:
 - `documents.jsonl` - one JSON object per source page
 - `chunks.jsonl` - one JSON object per text chunk
 - `manifest.json` - run metadata and counters
-- `raw_html/` - canonical raw HTML snapshots (unless `--no-raw-html`)
+- `raw_html/` - canonical raw HTML/PDF snapshots (unless `--no-raw-html`)
 - `ingestion_report.json` - Convex ingestion stats (after `ingest:convex`)
 
 ## Convex ingestion env
@@ -126,7 +138,7 @@ You can keep these values in `scrapers/.env`.
 - `doc_id`, `url`, `source`, `title`, `description`, `lang`
 - `headings`, `content`, `word_count`, `content_hash`
 - `fetched_at`, `lastmod`, `changefreq`, `priority`
-- `raw_html_file`
+- `raw_html_file` (may point to a `.pdf` when PDF sources are scraped)
 
 `chunks.jsonl` records contain:
 
@@ -138,8 +150,9 @@ You can keep these values in `scrapers/.env`.
 
 1. Create a site definition in `src/sites/<site-id>.ts` implementing `SiteDefinition`.
 2. Register it in `src/sites/index.ts`.
-3. Run with `npm run scrape -- --site <site-id>`.
-4. Optional: add a dedicated shortcut script in `package.json`.
+3. If the site lacks sitemaps, set `seedUrls` and `crawlLinks` in the site definition.
+4. Run with `npm run scrape -- --site <site-id>`.
+5. Optional: add a dedicated shortcut script in `package.json`.
 
 This keeps all generic crawling logic in one place and site logic small and composable.
 

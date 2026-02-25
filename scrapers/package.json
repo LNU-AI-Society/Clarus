@@ -6,6 +6,7 @@
   "description": "RAG-oriented web scrapers for Clarus",
   "scripts": {
     "scrape": "tsx src/cli.ts",
+    "scrape:lagen": "tsx src/lagen-scraper.ts",
     "scrape:migrationsverket": "tsx src/migrationsverket-scraper.ts",
     "ingest:convex": "tsx src/convex-ingest.ts",
     "typecheck": "tsc --noEmit"
@@ -19,9 +20,11 @@
     "dotenv": "^16.6.1",
     "fast-xml-parser": "^5.3.2",
     "jsdom": "^27.0.1",
+    "pdf-parse": "^1.1.1",
     "robots-parser": "^3.0.1"
   },
   "devDependencies": {
+    "@types/pdf-parse": "^1.1.4",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^24.6.1",
     "tsx": "^4.20.5",
