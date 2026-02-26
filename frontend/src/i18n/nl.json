@@ -10,6 +10,7 @@
   "auth.signUp": "Registreren",
   "chat.analysis.summaryIntro": "Ik heb het document geanalyseerd. Hier is een samenvatting van de belangrijkste punten en risico's:",
   "chat.backToHomeAria": "Terug naar home",
+  "chat.conversations.new": "Nieuwe chat",
   "chat.errors.fileAnalysisFailed": "Documentanalyse mislukt. Probeer het opnieuw.",
   "chat.errors.generic": "Sorry, er is iets misgegaan. Probeer het opnieuw.",
   "chat.errors.noResponse": "Geen antwoord gegenereerd.",

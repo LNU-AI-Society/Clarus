@@ -21,3 +21,12 @@ export interface Message {
   citations?: Citation[];
   analysis?: AnalysisResult;
 }
+
+export interface ChatConversation {
+  id: string;
+  title: string;
+  last_message_preview: string;
+  created_at: number;
+  updated_at: number;
+  last_message_at: number;
+}

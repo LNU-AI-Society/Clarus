@@ -41,6 +41,7 @@ npm run typecheck
 ```bash
 npm run scrape
 npm run scrape:migrationsverket
+npm run scrape:lagen
 npm run ingest:convex
 npm run typecheck
 ```

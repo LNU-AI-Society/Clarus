@@ -10,6 +10,7 @@
   "auth.signUp": "Skapa konto",
   "chat.analysis.summaryIntro": "Jag har analyserat dokumentet. Här är en sammanfattning av viktiga punkter och risker:",
   "chat.backToHomeAria": "Tillbaka till start",
+  "chat.conversations.new": "Ny chatt",
   "chat.errors.fileAnalysisFailed": "Misslyckades med att analysera dokumentet. Försök igen.",
   "chat.errors.generic": "Tyvärr gick något fel. Försök igen.",
   "chat.errors.noResponse": "Inget svar genererades.",

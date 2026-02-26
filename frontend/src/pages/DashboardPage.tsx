@@ -1,16 +1,45 @@
 import LanguageSwitch from '../components/LanguageSwitch';
+import type { ChatConversation } from '../components/chat/types';
 import { api } from '../lib/convexApi';
 import type { GuidedSession } from '../types/guided';
 import { useNavigate } from '@tanstack/react-router';
-import { T } from '@tolgee/react';
-import { useQuery } from 'convex/react';
-import { FileText, CheckCircle, Clock } from 'lucide-react';
+import { T, useTranslate } from '@tolgee/react';
+import { useMutation, useQuery } from 'convex/react';
+import { CheckCircle, Clock, FileText, MessageSquare, Plus } from 'lucide-react';
+
+const LEGACY_DEFAULT_CONVERSATION_TITLE = 'New chat';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslate();
   const historyQuery = useQuery(api.guided.getHistory);
   const history = (historyQuery ?? []) as GuidedSession[];
   const isLoading = historyQuery === undefined;
+  const conversationsQuery = useQuery(api.chat.listConversations, { limit: 3 });
+  const conversations = (conversationsQuery ?? []) as ChatConversation[];
+  const isChatsLoading = conversationsQuery === undefined;
+  const createConversation = useMutation(api.chat.createConversation);
+
+  const handleStartChat = async () => {
+    try {
+      const created = (await createConversation({})) as ChatConversation;
+      navigate({
+        to: '/chat',
+        search: { conversationId: created.id },
+      });
+    } catch (error) {
+      console.error(error);
+      navigate({ to: '/chat' });
+    }
+  };
+
+  const getConversationTitle = (conversation: ChatConversation) => {
+    const title = conversation.title.trim();
+    if (!title || title === LEGACY_DEFAULT_CONVERSATION_TITLE) {
+      return t('chat.conversations.new');
+    }
+    return title;
+  };
 
   return (
     <div className="from-app-bg via-app-bg-soft to-app-bg-cool text-ink relative min-h-screen overflow-hidden bg-linear-to-br">
@@ -111,20 +140,64 @@ const DashboardPage = () => {
 
             <section>
               <h2 className="text-ink mb-4 flex items-center gap-2 text-xl font-bold">
-                <Clock className="text-olive h-5 w-5" />
+                <MessageSquare className="text-olive h-5 w-5" />
                 <T keyName="dashboard.recent.title" />
               </h2>
-              <div className="rounded-card border-border/80 bg-surface shadow-card border p-8 text-center">
-                <p className="text-subtle mb-4">
-                  <T keyName="dashboard.recent.empty" />
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate({ to: '/chat' })}
-                  className="text-brand hover:text-brand-hover text-sm font-semibold"
-                >
-                  <T keyName="dashboard.recent.start" />
-                </button>
+              <div className="rounded-card border-border/80 bg-surface shadow-card border p-6">
+                {isChatsLoading ? (
+                  <p className="text-subtle text-sm">
+                    <T keyName="dashboard.recent.loading" />
+                  </p>
+                ) : conversations.length === 0 ? (
+                  <div className="text-center">
+                    <p className="text-subtle mb-4">
+                      <T keyName="dashboard.recent.empty" />
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleStartChat}
+                      className="text-brand hover:text-brand-hover text-sm font-semibold"
+                    >
+                      <T keyName="dashboard.recent.start" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {conversations.map((conversation) => (
+                      <button
+                        type="button"
+                        key={conversation.id}
+                        onClick={() =>
+                          navigate({
+                            to: '/chat',
+                            search: { conversationId: conversation.id },
+                          })
+                        }
+                        className="border-border/80 hover:border-brand/40 hover:bg-brand-soft/30 bg-surface-soft flex w-full items-center justify-between rounded-xl border p-3 text-left transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-ink truncate text-sm font-semibold">
+                            {getConversationTitle(conversation)}
+                          </p>
+                          <p className="text-subtle truncate text-xs">
+                            {conversation.last_message_preview || (
+                              <T keyName="chat.conversations.noMessages" />
+                            )}
+                          </p>
+                        </div>
+                        <Clock className="text-muted h-4 w-4 shrink-0" />
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleStartChat}
+                      className="text-brand hover:text-brand-hover inline-flex items-center gap-2 text-sm font-semibold"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <T keyName="dashboard.recent.start" />
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
           </div>

@@ -10,6 +10,7 @@
   "auth.signUp": "Luo tili",
   "chat.analysis.summaryIntro": "Olen analysoinut asiakirjan. Tassa on yhteenveto keskeisista kohdista ja riskeista:",
   "chat.backToHomeAria": "Takaisin etusivulle",
+  "chat.conversations.new": "Uusi chat",
   "chat.errors.fileAnalysisFailed": "Asiakirjan analysointi epaonnistui. Yrita uudelleen.",
   "chat.errors.generic": "Pahoittelut, jotain meni pieleen. Yrita uudelleen.",
   "chat.errors.noResponse": "Vastausta ei muodostettu.",
