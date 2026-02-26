@@ -22,11 +22,45 @@ export default defineSchema({
     created_at: v.number(),
     updated_at: v.number(),
   }).index('by_user_created', ['user_id', 'created_at']),
+  chatConversations: defineTable({
+    user_id: v.string(),
+    title: v.string(),
+    last_message_preview: v.string(),
+    created_at: v.number(),
+    updated_at: v.number(),
+    last_message_at: v.number(),
+  })
+    .index('by_user_created', ['user_id', 'created_at'])
+    .index('by_user_last_message', ['user_id', 'last_message_at']),
   chatMessages: defineTable({
+    user_id: v.optional(v.string()),
+    conversation_id: v.optional(v.id('chatConversations')),
     role: v.string(),
     content: v.string(),
+    is_error: v.optional(v.boolean()),
+    citations: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          title: v.string(),
+          url: v.string(),
+          snippet: v.string(),
+          source_type: v.string(),
+        }),
+      ),
+    ),
+    analysis: v.optional(
+      v.object({
+        summary: v.string(),
+        key_points: v.array(v.string()),
+        risks: v.array(v.string()),
+        suggested_questions: v.array(v.string()),
+      }),
+    ),
     created_at: v.number(),
-  }),
+  })
+    .index('by_conversation_created', ['conversation_id', 'created_at'])
+    .index('by_user_created', ['user_id', 'created_at']),
   actionUsageEvents: defineTable({
     user_id: v.string(),
     action: v.string(),

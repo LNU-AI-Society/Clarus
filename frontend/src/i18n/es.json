@@ -10,6 +10,7 @@
   "auth.signUp": "Registrarse",
   "chat.analysis.summaryIntro": "He analizado el documento. Aqui tienes un resumen de los puntos clave y riesgos:",
   "chat.backToHomeAria": "Volver al inicio",
+  "chat.conversations.new": "Nuevo chat",
   "chat.errors.fileAnalysisFailed": "No se pudo analizar el documento. Intentalo de nuevo.",
   "chat.errors.generic": "Lo sentimos, algo salio mal. Intentalo de nuevo.",
   "chat.errors.noResponse": "No se genero ninguna respuesta.",

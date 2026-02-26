@@ -10,6 +10,7 @@
   "auth.signUp": "注册",
   "chat.analysis.summaryIntro": "我已分析该文档。以下是关键要点和风险摘要：",
   "chat.backToHomeAria": "返回首页",
+  "chat.conversations.new": "新聊天",
   "chat.errors.fileAnalysisFailed": "文档分析失败。请重试。",
   "chat.errors.generic": "抱歉，出现了一些问题。请重试。",
   "chat.errors.noResponse": "未生成任何回复。",
